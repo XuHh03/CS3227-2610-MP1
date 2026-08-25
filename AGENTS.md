@@ -9,8 +9,8 @@ Unless the user says otherwise, assume that you are assisting a student working 
 # Student profile
 
 * Prior knowledge: Basic Java and OOP concepts.
-* Level of programming experience: [to be filled]
-* IDE and level of expertise: [to be filled]
+* Level of programming experience: Intermediate, familiar with fundamentals to data structures and algorithms
+* IDE and level of expertise: IntelliJ IDEA or VS Code, intermediate proficiency.
 
 # Guidance for interacting with users
 
@@ -33,3 +33,51 @@ Ensure that Java 25 is used when running the application or build tasks. On macO
 Use lightweight tags unless the user requests an annotated tag.
 When proposing or creating a commit message, include enough detail to explain the rationale for the change.
 Do not commit or push unless explicitly asked.
+
+# NutriByte project
+
+NutriByte is a Java desktop pantry inventory and expiry-management application.
+Its purpose is to help users track pantry items, quantities, and expiry dates.
+
+## Scope
+
+The main domain is pantry management. Do not add recipes, meal planning, diet
+tracking, calorie tracking, OCR, barcode scanning, chatbot functionality, LLM
+API integration, cloud synchronisation, or mobile functionality unless the user
+explicitly requests it.
+
+## Incremental development
+
+Implement and verify one milestone at a time:
+
+1. Basic greeting and exit
+2. Add and list pantry items
+3. Consume and restock
+4. Validation and error handling
+5. Delete and search
+6. Categories and expiry dates
+7. Persistence
+8. JUnit tests and Gradle
+9. JavaFX GUI
+10. Documentation, CI, and visual polishing
+
+Do not implement future milestones prematurely. When a milestone is complete,
+run relevant tests or a representative manual workflow before moving on.
+
+## Architecture
+
+Use separate packages and keep business logic independent of the user interface:
+
+- `nutribyte.model` — domain objects and enums
+- `nutribyte.service` — pantry operations and business logic
+- `nutribyte.storage` — persistence and file handling
+- `nutribyte.ui` — command-line and JavaFX interfaces
+
+Prefer small cohesive classes, meaningful encapsulation, and the simplest design
+that satisfies the current milestone. Avoid god classes and unnecessary abstractions.
+
+## Current project direction
+
+The application is being developed incrementally from the existing pantry domain
+foundation. Preserve the pantry-only scope and explain significant design choices
+briefly so the student can understand and review the implementation.
