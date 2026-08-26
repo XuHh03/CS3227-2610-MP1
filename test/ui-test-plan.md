@@ -1,7 +1,8 @@
 # NutriByte command-line UI test plan
 
 These tests run each scenario as a separate process using Java 25. Output must
-match exactly, including line order and punctuation.
+match exactly, including line order and punctuation. UI-001 through UI-007 use
+an isolated temporary data file; remove it before each case.
 
 ## Maintenance rule
 
@@ -14,7 +15,8 @@ complete.
 
 ```text
 rm -rf /tmp/nutribyte-classes && mkdir -p /tmp/nutribyte-classes && javac -encoding UTF-8 -d /tmp/nutribyte-classes $(rg --files src/main/java -g '*.java')
-java -cp /tmp/nutribyte-classes nutribyte.ui.NutriByte
+rm -f /tmp/nutribyte-ui-test-data.txt
+java -Dnutribyte.dataFile=/tmp/nutribyte-ui-test-data.txt -cp /tmp/nutribyte-classes nutribyte.ui.NutriByte
 ```
 
 ## UI-001 — Start and exit
@@ -32,8 +34,69 @@ Expected output:
 ```text
 Hello! I'm NutriByte.
 What can I do for you?
-Commands: add <name> <quantity>, consume <name> <quantity>,
-          restock <name> <quantity>, list, bye
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          consume <name> <quantity>, restock <name> <quantity>,
+          delete <name>, search <text>,
+          list, bye
+Goodbye! Keep your pantry fresh.
+```
+
+## UI-008 — Persist pantry data between runs
+
+Aim: Verify that an item saved by one process is loaded by the next process.
+
+First process input:
+
+```text
+add oats 2 grains 2026-12-01
+bye
+```
+
+Second process input:
+
+```text
+list
+bye
+```
+
+Expected output from the second process:
+
+```text
+Hello! I'm NutriByte.
+What can I do for you?
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          consume <name> <quantity>, restock <name> <quantity>,
+          delete <name>, search <text>,
+          list, bye
+Pantry items:
+1. oats (2) [grains, expires 2026-12-01]
+Goodbye! Keep your pantry fresh.
+```
+
+## UI-007 — Add category and expiry metadata
+
+Aim: Verify that an item can be stored and displayed with category and expiry date metadata.
+
+Input:
+
+```text
+add milk 2 dairy 2026-09-15
+list
+bye
+```
+
+Expected output:
+
+```text
+Hello! I'm NutriByte.
+What can I do for you?
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          consume <name> <quantity>, restock <name> <quantity>,
+          delete <name>, search <text>,
+          list, bye
+Added: milk (2)
+Pantry items:
+1. milk (2) [dairy, expires 2026-09-15]
 Goodbye! Keep your pantry fresh.
 ```
 
@@ -54,8 +117,10 @@ Expected output:
 ```text
 Hello! I'm NutriByte.
 What can I do for you?
-Commands: add <name> <quantity>, consume <name> <quantity>,
-          restock <name> <quantity>, list, bye
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          consume <name> <quantity>, restock <name> <quantity>,
+          delete <name>, search <text>,
+          list, bye
 Added: rice (3)
 Pantry items:
 1. rice (3)
@@ -81,8 +146,10 @@ Expected output:
 ```text
 Hello! I'm NutriByte.
 What can I do for you?
-Commands: add <name> <quantity>, consume <name> <quantity>,
-          restock <name> <quantity>, list, bye
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          consume <name> <quantity>, restock <name> <quantity>,
+          delete <name>, search <text>,
+          list, bye
 Added: rice (3)
 Consumed: rice (1)
 Restocked: rice (4)
@@ -113,8 +180,10 @@ Expected output:
 ```text
 Hello! I'm NutriByte.
 What can I do for you?
-Commands: add <name> <quantity>, consume <name> <quantity>,
-          restock <name> <quantity>, list, bye
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          consume <name> <quantity>, restock <name> <quantity>,
+          delete <name>, search <text>,
+          list, bye
 Added: rice (3)
 Not enough stock to consume 5 rice.
 Quantity must be greater than zero.
@@ -122,5 +191,69 @@ Quantity must be greater than zero.
 Item not found: flour
 Pantry items:
 1. rice (3)
+Goodbye! Keep your pantry fresh.
+```
+
+## UI-005 — Search pantry items
+
+Aim: Verify that search finds matching item names without changing the pantry.
+
+Input:
+
+```text
+add rice 3
+add brown 2
+add milk 1
+search rice
+bye
+```
+
+Expected output:
+
+```text
+Hello! I'm NutriByte.
+What can I do for you?
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          consume <name> <quantity>, restock <name> <quantity>,
+          delete <name>, search <text>,
+          list, bye
+Added: rice (3)
+Added: brown (2)
+Added: milk (1)
+Matching items:
+1. rice (3)
+Goodbye! Keep your pantry fresh.
+```
+
+## UI-006 — Delete a pantry item
+
+Aim: Verify that delete removes the named item and reports unknown items.
+
+Input:
+
+```text
+add rice 3
+add milk 1
+delete rice
+delete flour
+list
+bye
+```
+
+Expected output:
+
+```text
+Hello! I'm NutriByte.
+What can I do for you?
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          consume <name> <quantity>, restock <name> <quantity>,
+          delete <name>, search <text>,
+          list, bye
+Added: rice (3)
+Added: milk (1)
+Deleted: rice
+Item not found: flour
+Pantry items:
+1. milk (1)
 Goodbye! Keep your pantry fresh.
 ```
