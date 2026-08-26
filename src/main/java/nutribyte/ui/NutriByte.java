@@ -71,6 +71,8 @@ public class NutriByte {
                 searchItems(parsedCommand.arguments(), pantryService);
             } else if (command.equalsIgnoreCase("filter")) {
                 filterItems(parsedCommand.arguments(), pantryService);
+            } else if (command.equalsIgnoreCase("help")) {
+                UI.showHelp();
             } else {
                 System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search', 'filter', 'list', or 'bye'.");
             }

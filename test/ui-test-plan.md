@@ -11,6 +11,34 @@ continue to pass as regression tests, and each new user-facing feature must
 have at least one corresponding test case before the increment is considered
 complete.
 
+## UI-010 — Display help
+
+Aim: Verify that `help` displays usage information for all available commands.
+
+Input:
+
+```text
+help
+bye
+```
+
+Expected output includes:
+
+```text
+Available commands:
+  add <name> <quantity> [category] [expiry YYYY-MM-DD]
+  list
+  consume <name> <quantity>
+  restock <name> <quantity>
+  delete <name>
+  search <text>
+  filter category <category>
+  filter expiry-before <date>
+  filter expiry-between <start> <end>
+  help
+  bye or exit
+```
+
 ## Build and run command
 
 ```text

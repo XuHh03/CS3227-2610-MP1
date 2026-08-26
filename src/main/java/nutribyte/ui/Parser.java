@@ -38,6 +38,7 @@ public class Parser {
         DELETE,
         SEARCH,
         FILTER,
+        HELP,
         BYE,
         EXIT,
         UNKNOWN
