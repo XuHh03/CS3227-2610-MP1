@@ -1,11 +1,15 @@
 package nutribyte.model;
 
+import java.time.LocalDate;
+
 /**
  * Represents an item currently stored in the pantry.
  */
 public class PantryItem {
     private final String name;
     private int quantity;
+    private final Category category;
+    private final LocalDate expiryDate;
 
     /**
      * Creates a pantry item.
@@ -14,8 +18,22 @@ public class PantryItem {
      * @param quantity number of units in the pantry
      */
     public PantryItem(String name, int quantity) {
+        this(name, quantity, Category.GENERAL, null);
+    }
+
+    /**
+     * Creates a pantry item with category and expiry metadata.
+     *
+     * @param name item name
+     * @param quantity number of units
+     * @param category item category
+     * @param expiryDate expiry date, or null when unknown
+     */
+    public PantryItem(String name, int quantity, Category category, LocalDate expiryDate) {
         this.name = name;
         this.quantity = quantity;
+        this.category = category;
+        this.expiryDate = expiryDate;
     }
 
     public String getName() {
@@ -24,6 +42,14 @@ public class PantryItem {
 
     public int getQuantity() {
         return quantity;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public LocalDate getExpiryDate() {
+        return expiryDate;
     }
 
     /**
@@ -37,6 +63,14 @@ public class PantryItem {
 
     @Override
     public String toString() {
-        return name + " (" + quantity + ")";
+        String details = name + " (" + quantity + ")";
+        if (category != Category.GENERAL || expiryDate != null) {
+            details += " [" + category.toString().toLowerCase();
+            if (expiryDate != null) {
+                details += ", expires " + expiryDate;
+            }
+            details += "]";
+        }
+        return details;
     }
 }
