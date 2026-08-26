@@ -30,7 +30,8 @@ public class NutriByte {
     private static void greetUser() {
         System.out.println("Hello! I'm NutriByte.");
         System.out.println("What can I do for you?");
-        System.out.println("Type 'bye' to exit.");
+        System.out.println("Commands: add <name> <quantity>, consume <name> <quantity>,");
+        System.out.println("          restock <name> <quantity>, list, bye");
     }
 
     private static void runCommandLoop(Scanner scanner, PantryService pantryService) {
@@ -44,8 +45,12 @@ public class NutriByte {
                 listItems(pantryService);
             } else if (command.toLowerCase().startsWith("add ")) {
                 addItem(command, pantryService);
+            } else if (command.toLowerCase().startsWith("consume ")) {
+                changeQuantity(command, pantryService, false);
+            } else if (command.toLowerCase().startsWith("restock ")) {
+                changeQuantity(command, pantryService, true);
             } else {
-                System.out.println("Unknown command. Try 'add <name> <quantity>', 'list', or 'bye'.");
+                System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'list', or 'bye'.");
             }
         }
     }
@@ -77,6 +82,29 @@ public class NutriByte {
         for (PantryItem item : pantryService.getItems()) {
             System.out.println(itemNumber + ". " + item);
             itemNumber++;
+        }
+    }
+
+    private static void changeQuantity(String command, PantryService pantryService, boolean restock) {
+        String[] parts = command.split("\\s+");
+        if (parts.length != 3) {
+            System.out.println("Usage: " + (restock ? "restock" : "consume") + " <name> <quantity>");
+            return;
+        }
+
+        try {
+            int quantity = Integer.parseInt(parts[2]);
+            boolean updated = restock
+                    ? pantryService.restockItem(parts[1], quantity)
+                    : pantryService.consumeItem(parts[1], quantity);
+            if (updated) {
+                System.out.println((restock ? "Restocked: " : "Consumed: ")
+                        + parts[1] + " (" + quantity + ")");
+            } else {
+                System.out.println("Item not found: " + parts[1]);
+            }
+        } catch (NumberFormatException exception) {
+            System.out.println("Quantity must be a whole number.");
         }
     }
 }

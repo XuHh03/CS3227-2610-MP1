@@ -26,6 +26,15 @@ public class PantryItem {
         return quantity;
     }
 
+    /**
+     * Changes the quantity by the supplied amount.
+     *
+     * @param amount positive to add stock, negative to consume stock
+     */
+    public void changeQuantity(int amount) {
+        quantity += amount;
+    }
+
     @Override
     public String toString() {
         return name + " (" + quantity + ")";

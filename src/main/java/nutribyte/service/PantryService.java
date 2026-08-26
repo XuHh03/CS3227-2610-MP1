@@ -23,6 +23,40 @@ public class PantryService {
     }
 
     /**
+     * Reduces the quantity of a named pantry item.
+     *
+     * @param name item name
+     * @param quantity number of units consumed
+     * @return true if the item was found and updated
+     */
+    public boolean consumeItem(String name, int quantity) {
+        for (PantryItem item : items) {
+            if (item.getName().equalsIgnoreCase(name)) {
+                item.changeQuantity(-quantity);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Increases the quantity of a named pantry item.
+     *
+     * @param name item name
+     * @param quantity number of units restocked
+     * @return true if the item was found and updated
+     */
+    public boolean restockItem(String name, int quantity) {
+        for (PantryItem item : items) {
+            if (item.getName().equalsIgnoreCase(name)) {
+                item.changeQuantity(quantity);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Returns the current pantry items in insertion order.
      *
      * @return an unmodifiable view of the pantry items
