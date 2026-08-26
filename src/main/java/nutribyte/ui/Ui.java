@@ -16,7 +16,7 @@ public class Ui {
         System.out.println("What can I do for you?");
         System.out.println("Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],");
         System.out.println("          restock <name> <quantity>, delete <name>, search <text>,");
-        System.out.println("          list, bye");
+        System.out.println("          filter category|expiry-before|expiry-between, list, bye");
     }
 
     /**

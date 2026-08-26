@@ -11,6 +11,7 @@ import java.time.format.DateTimeParseException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Scanner;
+import java.util.List;
 
 /**
  * Command-line entry point for the NutriByte pantry application.
@@ -68,8 +69,10 @@ public class NutriByte {
                 deleteItem(parsedCommand.arguments(), pantryService);
             } else if (command.equalsIgnoreCase("search")) {
                 searchItems(parsedCommand.arguments(), pantryService);
+            } else if (command.equalsIgnoreCase("filter")) {
+                filterItems(parsedCommand.arguments(), pantryService);
             } else {
-                System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search', 'list', or 'bye'.");
+                System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search', 'filter', 'list', or 'bye'.");
             }
             savePantry(pantryService, storage);
         }
@@ -190,6 +193,45 @@ public class NutriByte {
         for (PantryItem item : pantryService.searchItems(query)) {
             System.out.println(itemNumber + ". " + item);
             itemNumber++;
+        }
+    }
+
+    private static void filterItems(String[] parts, PantryService pantryService) {
+        if (parts.length < 2) {
+            System.out.println("Usage: filter category <category>, expiry-before <date>, or expiry-between <start> <end>");
+            return;
+        }
+
+        try {
+            List<PantryItem> matches;
+            if (parts[0].equalsIgnoreCase("category") && parts.length == 2) {
+                Category category = parseCategory(parts[1]);
+                if (category == null) {
+                    return;
+                }
+                matches = pantryService.filterByCategory(category);
+            } else if (parts[0].equalsIgnoreCase("expiry-before") && parts.length == 2) {
+                matches = pantryService.filterByExpiryBefore(LocalDate.parse(parts[1]));
+            } else if (parts[0].equalsIgnoreCase("expiry-between") && parts.length == 3) {
+                matches = pantryService.filterByExpiryRange(
+                        LocalDate.parse(parts[1]), LocalDate.parse(parts[2]));
+            } else {
+                System.out.println("Usage: filter category <category>, expiry-before <date>, or expiry-between <start> <end>");
+                return;
+            }
+
+            if (matches.isEmpty()) {
+                System.out.println("No matching items found.");
+            } else {
+                System.out.println("Filtered items:");
+                int itemNumber = 1;
+                for (PantryItem item : matches) {
+                    System.out.println(itemNumber + ". " + item);
+                    itemNumber++;
+                }
+            }
+        } catch (DateTimeParseException exception) {
+            System.out.println("Expiry date must use YYYY-MM-DD format.");
         }
     }
 }

@@ -37,7 +37,38 @@ What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
           delete <name>, search <text>,
-          list, bye
+          filter category|expiry-before|expiry-between, list, bye
+Goodbye! Keep your pantry fresh.
+```
+
+## UI-009 — Filter by category and expiry range
+
+Aim: Verify that filtering uses pantry metadata rather than item-name search.
+
+Input:
+
+```text
+add milk 2 dairy 2026-09-15
+add rice 3 grains 2026-12-01
+filter category dairy
+filter expiry-between 2026-09-01 2026-09-30
+bye
+```
+
+Expected output:
+
+```text
+Hello! I'm NutriByte.
+What can I do for you?
+Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
+          restock <name> <quantity>, delete <name>, search <text>,
+          filter category|expiry-before|expiry-between, list, bye
+Added: milk (2)
+Added: rice (3)
+Filtered items:
+1. milk (2) [dairy, expires 2026-09-15]
+Filtered items:
+1. milk (2) [dairy, expires 2026-09-15]
 Goodbye! Keep your pantry fresh.
 ```
 
@@ -67,7 +98,7 @@ What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
           delete <name>, search <text>,
-          list, bye
+          filter category|expiry-before|expiry-between, list, bye
 Pantry items:
 1. oats (2) [grains, expires 2026-12-01]
 Goodbye! Keep your pantry fresh.
@@ -93,7 +124,7 @@ What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
           delete <name>, search <text>,
-          list, bye
+          filter category|expiry-before|expiry-between, list, bye
 Added: milk (2)
 Pantry items:
 1. milk (2) [dairy, expires 2026-09-15]
@@ -120,7 +151,7 @@ What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
           delete <name>, search <text>,
-          list, bye
+          filter category|expiry-before|expiry-between, list, bye
 Added: rice (3)
 Pantry items:
 1. rice (3)
@@ -149,7 +180,7 @@ What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
           delete <name>, search <text>,
-          list, bye
+          filter category|expiry-before|expiry-between, list, bye
 Added: rice (3)
 Consumed: rice (1)
 Restocked: rice (4)
@@ -183,7 +214,7 @@ What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
           delete <name>, search <text>,
-          list, bye
+          filter category|expiry-before|expiry-between, list, bye
 Added: rice (3)
 Not enough stock to consume 5 rice.
 Quantity must be greater than zero.
@@ -216,7 +247,7 @@ What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
           delete <name>, search <text>,
-          list, bye
+          filter category|expiry-before|expiry-between, list, bye
 Added: rice (3)
 Added: brown (2)
 Added: milk (1)
