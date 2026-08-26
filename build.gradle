@@ -37,7 +37,7 @@ test {
 }
 
 application {
-    mainClass = 'seedu.duke.Duke'
+    mainClass = 'nutribyte.ui.NutriByte'
 }
 
 jar {
@@ -48,7 +48,7 @@ jar {
 }
 
 shadowJar {
-    archiveFileName = 'duke.jar'
+    archiveFileName = 'nutribyte.jar'
 }
 
 run {
