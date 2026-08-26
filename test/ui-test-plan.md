@@ -39,6 +39,66 @@ Available commands:
   bye or exit
 ```
 
+## UI-011 — Edit an item by index
+
+Aim: Verify that an item can be corrected by its one-based list index, including
+when two pantry entries have the same name.
+
+Input:
+
+```text
+add milk 2
+add milk 3 dairy 2026-01-01
+edit 2 quantity 7
+edit 2 category grains
+edit 2 expiry none
+list
+bye
+```
+
+Expected output includes:
+
+```text
+Added: milk (2)
+Added: milk (3)
+Edited item 2.
+Edited item 2.
+Edited item 2.
+Pantry items:
+1. milk (2)
+2. milk (7) [grains]
+Goodbye! Keep your pantry fresh.
+```
+
+## UI-012 — Reject invalid edit targets and values
+
+Aim: Verify that invalid edit indexes, fields, quantities, and dates are rejected
+without changing the selected pantry item.
+
+Input:
+
+```text
+add milk 2
+edit 0 quantity 4
+edit 1 colour white
+edit 1 quantity 0
+edit 1 expiry tomorrow
+list
+bye
+```
+
+Expected output includes:
+
+```text
+Item number is out of range.
+Editable fields are name, quantity, category, and expiry.
+Invalid value for quantity.
+Invalid value for expiry.
+Pantry items:
+1. milk (2)
+Goodbye! Keep your pantry fresh.
+```
+
 ## Build and run command
 
 ```text
