@@ -64,6 +64,14 @@ Implement and verify one milestone at a time:
 Do not implement future milestones prematurely. When a milestone is complete,
 run relevant tests or a representative manual workflow before moving on.
 
+### Test coverage target
+
+Maintain JUnit tests for approximately the highest-value 50% of methods. Prioritize
+complex, core, and business-critical methods rather than aiming for uniform coverage
+of trivial accessors. Update the relevant JUnit tests after every code change, and
+run the test suite before completing each increment, so the tests remain compliant
+with this coverage target.
+
 ## Architecture
 
 Use separate packages and keep business logic independent of the user interface:
