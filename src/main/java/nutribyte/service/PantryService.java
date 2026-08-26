@@ -29,14 +29,20 @@ public class PantryService {
      * @param quantity number of units consumed
      * @return true if the item was found and updated
      */
-    public boolean consumeItem(String name, int quantity) {
+    public PantryOperationResult consumeItem(String name, int quantity) {
+        if (quantity <= 0) {
+            return PantryOperationResult.INVALID_QUANTITY;
+        }
         for (PantryItem item : items) {
             if (item.getName().equalsIgnoreCase(name)) {
+                if (quantity > item.getQuantity()) {
+                    return PantryOperationResult.INSUFFICIENT_STOCK;
+                }
                 item.changeQuantity(-quantity);
-                return true;
+                return PantryOperationResult.SUCCESS;
             }
         }
-        return false;
+        return PantryOperationResult.ITEM_NOT_FOUND;
     }
 
     /**
@@ -46,14 +52,17 @@ public class PantryService {
      * @param quantity number of units restocked
      * @return true if the item was found and updated
      */
-    public boolean restockItem(String name, int quantity) {
+    public PantryOperationResult restockItem(String name, int quantity) {
+        if (quantity <= 0) {
+            return PantryOperationResult.INVALID_QUANTITY;
+        }
         for (PantryItem item : items) {
             if (item.getName().equalsIgnoreCase(name)) {
                 item.changeQuantity(quantity);
-                return true;
+                return PantryOperationResult.SUCCESS;
             }
         }
-        return false;
+        return PantryOperationResult.ITEM_NOT_FOUND;
     }
 
     /**

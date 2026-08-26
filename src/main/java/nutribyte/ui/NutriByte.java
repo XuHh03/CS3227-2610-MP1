@@ -2,6 +2,7 @@ package nutribyte.ui;
 
 import nutribyte.model.PantryItem;
 import nutribyte.service.PantryService;
+import nutribyte.service.PantryOperationResult;
 
 import java.util.Scanner;
 
@@ -64,8 +65,12 @@ public class NutriByte {
 
         try {
             int quantity = Integer.parseInt(parts[2]);
-            pantryService.addItem(parts[1], quantity);
-            System.out.println("Added: " + parts[1] + " (" + quantity + ")");
+            if (quantity <= 0) {
+                System.out.println("Quantity must be greater than zero.");
+            } else {
+                pantryService.addItem(parts[1], quantity);
+                System.out.println("Added: " + parts[1] + " (" + quantity + ")");
+            }
         } catch (NumberFormatException exception) {
             System.out.println("Quantity must be a whole number.");
         }
@@ -94,12 +99,16 @@ public class NutriByte {
 
         try {
             int quantity = Integer.parseInt(parts[2]);
-            boolean updated = restock
+            PantryOperationResult result = restock
                     ? pantryService.restockItem(parts[1], quantity)
                     : pantryService.consumeItem(parts[1], quantity);
-            if (updated) {
+            if (result == PantryOperationResult.SUCCESS) {
                 System.out.println((restock ? "Restocked: " : "Consumed: ")
                         + parts[1] + " (" + quantity + ")");
+            } else if (result == PantryOperationResult.INVALID_QUANTITY) {
+                System.out.println("Quantity must be greater than zero.");
+            } else if (result == PantryOperationResult.INSUFFICIENT_STOCK) {
+                System.out.println("Not enough stock to consume " + quantity + " " + parts[1] + ".");
             } else {
                 System.out.println("Item not found: " + parts[1]);
             }

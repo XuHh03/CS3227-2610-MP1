@@ -90,3 +90,37 @@ Pantry items:
 1. rice (6)
 Goodbye! Keep your pantry fresh.
 ```
+
+## UI-004 — Reject invalid quantities and stock operations
+
+Aim: Verify that invalid quantities, insufficient stock, and unknown items are
+reported without corrupting the pantry state.
+
+Input:
+
+```text
+add rice 3
+consume rice 5
+consume rice 0
+restock rice -1
+restock flour 2
+list
+bye
+```
+
+Expected output:
+
+```text
+Hello! I'm NutriByte.
+What can I do for you?
+Commands: add <name> <quantity>, consume <name> <quantity>,
+          restock <name> <quantity>, list, bye
+Added: rice (3)
+Not enough stock to consume 5 rice.
+Quantity must be greater than zero.
+Quantity must be greater than zero.
+Item not found: flour
+Pantry items:
+1. rice (3)
+Goodbye! Keep your pantry fresh.
+```
