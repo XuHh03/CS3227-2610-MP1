@@ -217,4 +217,58 @@ class PantryServiceTest {
 
         assertThrows(UnsupportedOperationException.class, () -> pantryService.getItems().clear());
     }
+
+    @Test
+    void editItem_duplicateNames_usesOneBasedIndex() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 2);
+        pantryService.addItem("Milk", 3, Category.DAIRY, LocalDate.of(2026, 1, 1));
+
+        PantryOperationResult result = pantryService.editItem(2, "quantity", "7");
+
+        assertEquals(PantryOperationResult.SUCCESS, result);
+        assertEquals(2, pantryService.getItems().get(0).getQuantity());
+        assertEquals(7, pantryService.getItems().get(1).getQuantity());
+    }
+
+    @Test
+    void editItem_allSupportedFields_updatesItem() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 2);
+
+        assertEquals(PantryOperationResult.SUCCESS, pantryService.editItem(1, "name", "Fresh Milk"));
+        assertEquals(PantryOperationResult.SUCCESS, pantryService.editItem(1, "quantity", "4"));
+        assertEquals(PantryOperationResult.SUCCESS, pantryService.editItem(1, "category", "dairy"));
+        assertEquals(PantryOperationResult.SUCCESS, pantryService.editItem(1, "expiry", "2026-01-01"));
+
+        PantryItem item = pantryService.getItems().get(0);
+        assertEquals("Fresh Milk", item.getName());
+        assertEquals(4, item.getQuantity());
+        assertEquals(Category.DAIRY, item.getCategory());
+        assertEquals(LocalDate.of(2026, 1, 1), item.getExpiryDate());
+    }
+
+    @Test
+    void editItem_expiryNone_clearsExpiryDate() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 2, Category.DAIRY, LocalDate.of(2026, 1, 1));
+
+        PantryOperationResult result = pantryService.editItem(1, "expiry", "none");
+
+        assertEquals(PantryOperationResult.SUCCESS, result);
+        assertEquals(null, pantryService.getItems().get(0).getExpiryDate());
+    }
+
+    @Test
+    void editItem_invalidIndexFieldOrValue_doesNotChangeItem() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 2);
+
+        assertEquals(PantryOperationResult.INVALID_INDEX, pantryService.editItem(0, "name", "Bread"));
+        assertEquals(PantryOperationResult.INVALID_FIELD, pantryService.editItem(1, "colour", "white"));
+        assertEquals(PantryOperationResult.INVALID_VALUE, pantryService.editItem(1, "quantity", "0"));
+        assertEquals(PantryOperationResult.INVALID_VALUE, pantryService.editItem(1, "expiry", "tomorrow"));
+        assertEquals("Milk", pantryService.getItems().get(0).getName());
+        assertEquals(2, pantryService.getItems().get(0).getQuantity());
+    }
 }

@@ -71,10 +71,12 @@ public class NutriByte {
                 searchItems(parsedCommand.arguments(), pantryService);
             } else if (command.equalsIgnoreCase("filter")) {
                 filterItems(parsedCommand.arguments(), pantryService);
+            } else if (command.equalsIgnoreCase("edit")) {
+                editItem(parsedCommand.arguments(), pantryService);
             } else if (command.equalsIgnoreCase("help")) {
                 UI.showHelp();
             } else {
-                System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search', 'filter', 'list', or 'bye'.");
+                System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search', 'filter', 'edit', 'list', or 'bye'.");
             }
             savePantry(pantryService, storage);
         }
@@ -175,6 +177,28 @@ public class NutriByte {
             System.out.println("Deleted: " + name);
         } else {
             System.out.println("Item not found: " + name);
+        }
+    }
+
+    private static void editItem(String[] parts, PantryService pantryService) {
+        if (parts.length != 3) {
+            System.out.println("Usage: edit <index> name|quantity|category|expiry <value>");
+            return;
+        }
+        try {
+            int index = Integer.parseInt(parts[0]);
+            PantryOperationResult result = pantryService.editItem(index, parts[1], parts[2]);
+            if (result == PantryOperationResult.SUCCESS) {
+                System.out.println("Edited item " + index + ".");
+            } else if (result == PantryOperationResult.INVALID_INDEX) {
+                System.out.println("Item number is out of range.");
+            } else if (result == PantryOperationResult.INVALID_FIELD) {
+                System.out.println("Editable fields are name, quantity, category, and expiry.");
+            } else {
+                System.out.println("Invalid value for " + parts[1] + ".");
+            }
+        } catch (NumberFormatException exception) {
+            System.out.println("Item number must be a whole number.");
         }
     }
 

@@ -6,10 +6,10 @@ import java.time.LocalDate;
  * Represents an item currently stored in the pantry.
  */
 public class PantryItem {
-    private final String name;
+    private String name;
     private int quantity;
-    private final Category category;
-    private final LocalDate expiryDate;
+    private Category category;
+    private LocalDate expiryDate;
 
     /**
      * Creates a pantry item.
@@ -50,6 +50,22 @@ public class PantryItem {
 
     public LocalDate getExpiryDate() {
         return expiryDate;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public void setExpiryDate(LocalDate expiryDate) {
+        this.expiryDate = expiryDate;
     }
 
     /**

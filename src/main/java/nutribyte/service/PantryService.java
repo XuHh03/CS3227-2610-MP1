@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.time.LocalDate;
+import java.time.DateTimeException;
 import java.util.Locale;
 import nutribyte.model.Category;
 
@@ -109,6 +110,41 @@ public class PantryService {
             }
         }
         return false;
+    }
+
+    /**
+     * Edits one item selected by its one-based list index.
+     *
+     * @param index one-based item index
+     * @param field name, quantity, category, or expiry
+     * @param value replacement value; use {@code none} to clear expiry
+     * @return result describing whether the edit succeeded
+     */
+    public PantryOperationResult editItem(int index, String field, String value) {
+        if (index < 1 || index > items.size()) {
+            return PantryOperationResult.INVALID_INDEX;
+        }
+        PantryItem item = items.get(index - 1);
+        try {
+            switch (field.toLowerCase(Locale.ROOT)) {
+            case "name" -> item.setName(value);
+            case "quantity" -> {
+                int quantity = Integer.parseInt(value);
+                if (quantity <= 0) {
+                    return PantryOperationResult.INVALID_VALUE;
+                }
+                item.setQuantity(quantity);
+            }
+            case "category" -> item.setCategory(Category.valueOf(value.toUpperCase(Locale.ROOT)));
+            case "expiry" -> item.setExpiryDate("none".equalsIgnoreCase(value) ? null : LocalDate.parse(value));
+            default -> {
+                return PantryOperationResult.INVALID_FIELD;
+            }
+            }
+        } catch (IllegalArgumentException | DateTimeException exception) {
+            return PantryOperationResult.INVALID_VALUE;
+        }
+        return PantryOperationResult.SUCCESS;
     }
 
     /**

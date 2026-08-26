@@ -16,7 +16,8 @@ public class Ui {
         System.out.println("What can I do for you?");
         System.out.println("Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],");
         System.out.println("          restock <name> <quantity>, delete <name>, search <text>,");
-        System.out.println("          filter category|expiry-before|expiry-between, help, list, bye");
+        System.out.println("          filter category|expiry-before|expiry-between, edit <index> <field> <value>,");
+        System.out.println("          help, list, bye");
     }
 
     /**
@@ -42,6 +43,8 @@ public class Ui {
         System.out.println("      Filter items expiring on or before a date.");
         System.out.println("  filter expiry-between <start> <end>");
         System.out.println("      Filter items within an inclusive expiry-date range.");
+        System.out.println("  edit <index> name|quantity|category|expiry <value>");
+        System.out.println("      Correct an item; use 'none' to clear its expiry date.");
         System.out.println("  help");
         System.out.println("      Display this help message.");
         System.out.println("  bye or exit");
