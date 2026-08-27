@@ -50,4 +50,12 @@ class ParserTest {
         assertEquals(Parser.Command.UNKNOWN, result.command());
         assertArrayEquals(new String[] {"rice"}, result.arguments());
     }
+
+    @Test
+    void parse_editCommand_returnsEditCommand() {
+        Parser.ParsedCommand result = parser.parse("edit 1 quantity 5");
+
+        assertEquals(Parser.Command.EDIT, result.command());
+        assertArrayEquals(new String[] {"1", "quantity", "5"}, result.arguments());
+    }
 }

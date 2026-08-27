@@ -20,7 +20,6 @@ import nutribyte.storage.PantryStorage;
  * Pantry operations will be added in later milestones.</p>
  */
 public class NutriByte {
-    private static final String EXIT_COMMAND = "bye";
     private static final Parser PARSER = new Parser();
     private static final Ui UI = new Ui();
 
@@ -51,33 +50,44 @@ public class NutriByte {
     private static void runCommandLoop(Scanner scanner, PantryService pantryService, PantryStorage storage) {
         while (scanner.hasNextLine()) {
             Parser.ParsedCommand parsedCommand = PARSER.parse(scanner.nextLine());
-            String command = parsedCommand.command().name().toLowerCase();
-            if (EXIT_COMMAND.equalsIgnoreCase(command) || "exit".equalsIgnoreCase(command)) {
+            if (parsedCommand.command() == Parser.Command.BYE
+                    || parsedCommand.command() == Parser.Command.EXIT) {
                 System.out.println("Goodbye! Keep your pantry fresh.");
                 savePantry(pantryService, storage);
                 return;
             }
-            if (command.equalsIgnoreCase("list")) {
+            switch (parsedCommand.command()) {
+            case LIST -> {
                 UI.showItems(pantryService.getItems());
-            } else if (command.equalsIgnoreCase("add")) {
+            }
+            case ADD -> {
                 addItem(parsedCommand.arguments(), pantryService);
-            } else if (command.equalsIgnoreCase("consume")) {
+            }
+            case CONSUME -> {
                 changeQuantity(parsedCommand.arguments(), pantryService, false);
-            } else if (command.equalsIgnoreCase("restock")) {
+            }
+            case RESTOCK -> {
                 changeQuantity(parsedCommand.arguments(), pantryService, true);
-            } else if (command.equalsIgnoreCase("delete")) {
+            }
+            case DELETE -> {
                 deleteItem(parsedCommand.arguments(), pantryService);
-            } else if (command.equalsIgnoreCase("search")) {
+            }
+            case SEARCH -> {
                 searchItems(parsedCommand.arguments(), pantryService);
-            } else if (command.equalsIgnoreCase("filter")) {
+            }
+            case FILTER -> {
                 filterItems(parsedCommand.arguments(), pantryService);
-            } else if (command.equalsIgnoreCase("edit")) {
+            }
+            case EDIT -> {
                 editItem(parsedCommand.arguments(), pantryService);
-            } else if (command.equalsIgnoreCase("help")) {
+            }
+            case HELP -> {
                 UI.showHelp();
-            } else {
+            }
+            default -> {
                 System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search',");
                 System.out.println("'filter', 'edit', 'list', or 'bye'.");
+            }
             }
             savePantry(pantryService, storage);
         }
