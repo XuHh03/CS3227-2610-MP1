@@ -43,6 +43,7 @@ public class PantryStorage {
                 continue;
             }
             String[] fields = line.split("\\t", -1);
+            assert fields.length == 4 : "Persisted pantry records must contain four fields";
             Category category = Category.valueOf(fields[2]);
             LocalDate expiryDate = fields[3].isBlank() ? null : LocalDate.parse(fields[3]);
             items.add(new PantryItem(fields[0], Integer.parseInt(fields[1]), category, expiryDate));
@@ -64,6 +65,8 @@ public class PantryStorage {
 
         List<String> lines = new ArrayList<>();
         for (PantryItem item : items) {
+            assert item != null : "The pantry must not contain null items when saving";
+            assert item.getCategory() != null : "Every persisted item must have a category";
             String expiry = item.getExpiryDate() == null ? "" : item.getExpiryDate().toString();
             lines.add(item.getName() + "\t" + item.getQuantity() + "\t"
                     + item.getCategory().name() + "\t" + expiry);

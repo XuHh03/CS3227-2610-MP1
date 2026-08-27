@@ -28,6 +28,7 @@ public class PantryService {
      * @param initialItems items to place in the pantry
      */
     public PantryService(List<PantryItem> initialItems) {
+        assert initialItems != null : "Loaded pantry items must not be null";
         items.addAll(initialItems);
     }
 
@@ -39,6 +40,8 @@ public class PantryService {
      */
     public void addItem(String name, int quantity) {
         items.add(new PantryItem(name, quantity));
+        assert items.get(items.size() - 1).getQuantity() == quantity
+                : "A newly added item must retain its requested quantity";
     }
 
     /**
@@ -51,6 +54,8 @@ public class PantryService {
      */
     public void addItem(String name, int quantity, Category category, LocalDate expiryDate) {
         items.add(new PantryItem(name, quantity, category, expiryDate));
+        assert items.get(items.size() - 1).getCategory() == category
+                : "A newly added item must retain its category";
     }
 
     /**
@@ -69,7 +74,10 @@ public class PantryService {
                 if (quantity > item.getQuantity()) {
                     return PantryOperationResult.INSUFFICIENT_STOCK;
                 }
+                int previousQuantity = item.getQuantity();
                 item.changeQuantity(-quantity);
+                assert item.getQuantity() == previousQuantity - quantity
+                        && item.getQuantity() >= 0 : "Consuming stock must preserve quantity accounting";
                 return PantryOperationResult.SUCCESS;
             }
         }
@@ -89,7 +97,10 @@ public class PantryService {
         }
         for (PantryItem item : items) {
             if (item.getName().equalsIgnoreCase(name)) {
+                int previousQuantity = item.getQuantity();
                 item.changeQuantity(quantity);
+                assert item.getQuantity() == previousQuantity + quantity
+                        : "Restocking must increase quantity by the requested amount";
                 return PantryOperationResult.SUCCESS;
             }
         }
@@ -125,6 +136,7 @@ public class PantryService {
             return PantryOperationResult.INVALID_INDEX;
         }
         PantryItem item = items.get(index - 1);
+        assert item != null : "Every valid pantry index must refer to an item";
         try {
             switch (field.toLowerCase(Locale.ROOT)) {
             case "name" -> item.setName(value);
