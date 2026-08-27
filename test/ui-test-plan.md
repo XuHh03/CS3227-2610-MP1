@@ -70,6 +70,30 @@ Pantry items:
 Goodbye! Keep your pantry fresh.
 ```
 
+## GUI-002 — Enter commands and view pantry items
+
+Aim: Verify that commands can be entered in the GUI using the same CLI syntax.
+
+Run:
+
+```text
+./gradlew run
+```
+
+Input in the GUI command field:
+
+```text
+add rice 3
+list
+help
+```
+
+Expected result:
+
+- Command status and help output appear in the compact status area.
+- Pantry items remain visible in the scrollable pantry list.
+- The command field accepts both the Run button and the Enter key.
+
 ## UI-012 — Reject invalid edit targets and values
 
 Aim: Verify that invalid edit indexes, fields, quantities, and dates are rejected
@@ -128,6 +152,23 @@ Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           filter category|expiry-before|expiry-between, list, bye
 Goodbye! Keep your pantry fresh.
 ```
+
+## GUI-001 — Launch JavaFX pantry view
+
+Aim: Verify that the JavaFX interface launches and displays persisted pantry items.
+
+Setup: Add at least one item to `data/pantry.txt` using the CLI, then run:
+
+```text
+./gradlew run
+```
+
+Expected result:
+
+- A window titled `NutriByte` opens.
+- The window displays the `NutriByte Pantry` heading.
+- The persisted pantry items appear in the list.
+- The window can be closed normally.
 
 ## UI-009 — Filter by category and expiry range
 
