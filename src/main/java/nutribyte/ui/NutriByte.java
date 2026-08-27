@@ -76,7 +76,8 @@ public class NutriByte {
             } else if (command.equalsIgnoreCase("help")) {
                 UI.showHelp();
             } else {
-                System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search', 'filter', 'edit', 'list', or 'bye'.");
+                System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search',");
+                System.out.println("'filter', 'edit', 'list', or 'bye'.");
             }
             savePantry(pantryService, storage);
         }
@@ -125,7 +126,8 @@ public class NutriByte {
         try {
             return Category.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException exception) {
-            System.out.println("Unknown category. Use general, grains, dairy, produce, meat, canned, snacks, or other.");
+            System.out.println("Unknown category. Use general, grains, dairy, produce, meat, canned,");
+            System.out.println("snacks, or other.");
             return null;
         }
     }
@@ -224,7 +226,8 @@ public class NutriByte {
 
     private static void filterItems(String[] parts, PantryService pantryService) {
         if (parts.length < 2) {
-            System.out.println("Usage: filter category <category>, expiry-before <date>, or expiry-between <start> <end>");
+            System.out.println("Usage: filter category <category>, expiry-before <date>, or");
+            System.out.println("expiry-between <start> <end>");
             return;
         }
 
@@ -242,7 +245,8 @@ public class NutriByte {
                 matches = pantryService.filterByExpiryRange(
                         LocalDate.parse(parts[1]), LocalDate.parse(parts[2]));
             } else {
-                System.out.println("Usage: filter category <category>, expiry-before <date>, or expiry-between <start> <end>");
+                System.out.println("Usage: filter category <category>, expiry-before <date>, or");
+                System.out.println("expiry-between <start> <end>");
                 return;
             }
 
