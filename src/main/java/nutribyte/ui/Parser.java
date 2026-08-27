@@ -44,7 +44,12 @@ public class Parser {
         UNKNOWN
     }
 
-    /** Structured result returned by the parser. */
+    /**
+     * Structured result returned by the parser.
+     *
+     * @param command parsed command
+     * @param arguments command arguments
+     */
     public record ParsedCommand(Command command, String[] arguments) {
     }
 }

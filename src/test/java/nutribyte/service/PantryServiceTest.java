@@ -7,9 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.junit.jupiter.api.Test;
+
 import nutribyte.model.Category;
 import nutribyte.model.PantryItem;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests pantry operations provided by {@link PantryService}.

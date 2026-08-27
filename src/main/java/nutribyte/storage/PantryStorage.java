@@ -1,8 +1,5 @@
 package nutribyte.storage;
 
-import nutribyte.model.Category;
-import nutribyte.model.PantryItem;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -10,6 +7,9 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import nutribyte.model.Category;
+import nutribyte.model.PantryItem;
 
 /**
  * Stores pantry items in a simple tab-separated text file.

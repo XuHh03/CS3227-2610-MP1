@@ -9,10 +9,11 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 
-import nutribyte.model.Category;
-import nutribyte.model.PantryItem;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import nutribyte.model.Category;
+import nutribyte.model.PantryItem;
 
 /**
  * Tests persistence of pantry items in tab-separated storage.

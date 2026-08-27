@@ -1,14 +1,14 @@
 package nutribyte.service;
 
-import nutribyte.model.PantryItem;
-
+import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.time.LocalDate;
-import java.time.DateTimeException;
 import java.util.Locale;
+
 import nutribyte.model.Category;
+import nutribyte.model.PantryItem;
 
 /**
  * Provides pantry operations independently of the user interface.

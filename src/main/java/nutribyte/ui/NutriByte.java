@@ -1,17 +1,17 @@
 package nutribyte.ui;
 
-import nutribyte.model.PantryItem;
-import nutribyte.model.Category;
-import nutribyte.service.PantryService;
-import nutribyte.service.PantryOperationResult;
-import nutribyte.storage.PantryStorage;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Scanner;
+
+import nutribyte.model.Category;
+import nutribyte.model.PantryItem;
+import nutribyte.service.PantryOperationResult;
+import nutribyte.service.PantryService;
+import nutribyte.storage.PantryStorage;
 
 /**
  * Command-line entry point for the NutriByte pantry application.

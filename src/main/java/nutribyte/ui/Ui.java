@@ -1,8 +1,8 @@
 package nutribyte.ui;
 
-import nutribyte.model.PantryItem;
-
 import java.util.List;
+
+import nutribyte.model.PantryItem;
 
 /**
  * Handles user-facing output for the NutriByte command-line interface.
