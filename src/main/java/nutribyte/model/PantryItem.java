@@ -1,15 +1,16 @@
 package nutribyte.model;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
 /**
  * Represents an item currently stored in the pantry.
  */
-public class PantryItem {
-    private String name;
-    private int quantity;
-    private Category category;
-    private LocalDate expiryDate;
+public final class PantryItem {
+    private final String name;
+    private final int quantity;
+    private final Category category;
+    private final LocalDate expiryDate;
 
     /**
      * Creates a pantry item.
@@ -57,25 +58,44 @@ public class PantryItem {
         return expiryDate;
     }
 
-    public void setName(String name) {
-        validateName(name);
-        this.name = name;
+    /**
+     * Returns an item with a different name.
+     *
+     * @param name replacement item name
+     * @return a validated item containing the replacement name
+     */
+    public PantryItem withName(String name) {
+        return new PantryItem(name, quantity, category, expiryDate);
     }
 
-    public void setQuantity(int quantity) {
-        validateQuantity(quantity);
-        this.quantity = quantity;
+    /**
+     * Returns an item with a different quantity.
+     *
+     * @param quantity replacement quantity
+     * @return a validated item containing the replacement quantity
+     */
+    public PantryItem withQuantity(int quantity) {
+        return new PantryItem(name, quantity, category, expiryDate);
     }
 
-    public void setCategory(Category category) {
-        if (category == null) {
-            throw new IllegalArgumentException("Category must not be null.");
-        }
-        this.category = category;
+    /**
+     * Returns an item with a different category.
+     *
+     * @param category replacement category
+     * @return a validated item containing the replacement category
+     */
+    public PantryItem withCategory(Category category) {
+        return new PantryItem(name, quantity, category, expiryDate);
     }
 
-    public void setExpiryDate(LocalDate expiryDate) {
-        this.expiryDate = expiryDate;
+    /**
+     * Returns an item with a different expiry date.
+     *
+     * @param expiryDate replacement expiry date, or null when unknown
+     * @return a validated item containing the replacement expiry date
+     */
+    public PantryItem withExpiryDate(LocalDate expiryDate) {
+        return new PantryItem(name, quantity, category, expiryDate);
     }
 
     /**
@@ -83,12 +103,12 @@ public class PantryItem {
      *
      * @param amount positive to add stock, negative to consume stock
      */
-    public void changeQuantity(int amount) {
+    public PantryItem withQuantityChange(int amount) {
         long updatedQuantity = (long) quantity + amount;
         if (updatedQuantity < 0 || updatedQuantity > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Quantity must not become negative or overflow.");
         }
-        quantity = (int) updatedQuantity;
+        return withQuantity((int) updatedQuantity);
     }
 
     private static void validateName(String name) {
@@ -108,7 +128,7 @@ public class PantryItem {
     public String toString() {
         String details = name + " (" + quantity + ")";
         if (category != Category.GENERAL || expiryDate != null) {
-            details += " [" + category.toString().toLowerCase();
+            details += " [" + category.name().toLowerCase(Locale.ROOT);
             if (expiryDate != null) {
                 details += ", expires " + expiryDate;
             }

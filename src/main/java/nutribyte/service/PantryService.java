@@ -100,9 +100,9 @@ public class PantryService {
             return PantryOperationResult.INSUFFICIENT_STOCK;
         }
         int previousQuantity = item.getQuantity();
-        item.changeQuantity(-quantity);
-        assert item.getQuantity() == previousQuantity - quantity
-                && item.getQuantity() >= 0 : "Consuming stock must preserve quantity accounting";
+        items.set(index - 1, item.withQuantityChange(-quantity));
+        assert items.get(index - 1).getQuantity() == previousQuantity - quantity
+                && items.get(index - 1).getQuantity() >= 0 : "Consuming stock must preserve quantity accounting";
         return PantryOperationResult.SUCCESS;
     }
 
@@ -143,8 +143,8 @@ public class PantryService {
         }
         PantryItem item = items.get(index - 1);
         int previousQuantity = item.getQuantity();
-        item.changeQuantity(quantity);
-        assert item.getQuantity() == previousQuantity + quantity
+        items.set(index - 1, item.withQuantityChange(quantity));
+        assert items.get(index - 1).getQuantity() == previousQuantity + quantity
                 : "Restocking must increase quantity by the requested amount";
         return PantryOperationResult.SUCCESS;
     }
@@ -195,19 +195,20 @@ public class PantryService {
             return PantryOperationResult.INVALID_VALUE;
         }
         PantryItem item = items.get(index - 1);
-        assert item != null : "Every valid pantry index must refer to an item";
         try {
             switch (field.toLowerCase(Locale.ROOT)) {
-            case "name" -> item.setName(value);
+            case "name" -> items.set(index - 1, item.withName(value));
             case "quantity" -> {
                 int quantity = Integer.parseInt(value);
                 if (quantity <= 0) {
                     return PantryOperationResult.INVALID_VALUE;
                 }
-                item.setQuantity(quantity);
+                items.set(index - 1, item.withQuantity(quantity));
             }
-            case "category" -> item.setCategory(Category.valueOf(value.toUpperCase(Locale.ROOT)));
-            case "expiry" -> item.setExpiryDate("none".equalsIgnoreCase(value) ? null : LocalDate.parse(value));
+            case "category" -> items.set(index - 1,
+                    item.withCategory(Category.valueOf(value.toUpperCase(Locale.ROOT))));
+            case "expiry" -> items.set(index - 1,
+                    item.withExpiryDate("none".equalsIgnoreCase(value) ? null : LocalDate.parse(value)));
             default -> {
                 return PantryOperationResult.INVALID_FIELD;
             }

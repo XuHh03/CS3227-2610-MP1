@@ -30,15 +30,15 @@ class PantryItemTest {
     }
 
     @Test
-    void settersAndChangeQuantity_updateAllMutableFields() {
+    void withMethods_updateAllItemFields() {
         PantryItem item = new PantryItem("Milk", 2);
         LocalDate expiryDate = LocalDate.of(2026, 9, 15);
 
-        item.setName("Fresh Milk");
-        item.setQuantity(4);
-        item.setCategory(Category.DAIRY);
-        item.setExpiryDate(expiryDate);
-        item.changeQuantity(-1);
+        item = item.withName("Fresh Milk");
+        item = item.withQuantity(4);
+        item = item.withCategory(Category.DAIRY);
+        item = item.withExpiryDate(expiryDate);
+        item = item.withQuantityChange(-1);
 
         assertEquals("Fresh Milk", item.getName());
         assertEquals(3, item.getQuantity());
@@ -57,8 +57,8 @@ class PantryItemTest {
     void changeQuantity_belowZeroOrOverflow_rejectsChange() {
         PantryItem item = new PantryItem("Milk", 2);
 
-        assertThrows(IllegalArgumentException.class, () -> item.changeQuantity(-3));
-        assertThrows(IllegalArgumentException.class, () -> item.changeQuantity(Integer.MAX_VALUE));
+        assertThrows(IllegalArgumentException.class, () -> item.withQuantityChange(-3));
+        assertThrows(IllegalArgumentException.class, () -> item.withQuantityChange(Integer.MAX_VALUE));
         assertEquals(2, item.getQuantity());
     }
 }
