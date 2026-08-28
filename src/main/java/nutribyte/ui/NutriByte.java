@@ -86,8 +86,7 @@ public class NutriByte {
                 UI.showHelp();
             }
             default -> {
-                System.out.println("Hmm, I don't recognize that command. Try 'add', 'consume', 'restock',");
-                System.out.println("'filter', 'edit', 'list', or 'bye'.");
+                System.out.println("I don't recognize that command. Type 'help' to see the available commands.");
             }
             }
             savePantry(pantryService, storage);
@@ -106,14 +105,14 @@ public class NutriByte {
         if (parts.length < 2 || parts.length > 5
                 || parts.length == 4 && !"expiry".equalsIgnoreCase(parts[2])
                 && !isCategory(parts[2])) {
-            System.out.println("Usage: add <name> <quantity> [category], expiry <YYYY-MM-DD>");
+            System.out.println("Add format: add <name> <quantity> [category] [expiry <YYYY-MM-DD>]");
             return;
         }
 
         try {
             int quantity = Integer.parseInt(parts[1]);
             if (quantity <= 0) {
-                System.out.println("Quantity must be greater than zero.");
+                System.out.println("Quantity must be a positive whole number. You entered " + parts[1] + ".");
             } else {
             if (parts.length == 2) {
                 pantryService.addItem(parts[0], quantity);
@@ -140,15 +139,16 @@ public class NutriByte {
                 }
                 pantryService.addItem(parts[0], quantity, category, expiryDate);
             } else {
-                System.out.println("Usage: add <name> <quantity> [category], expiry <YYYY-MM-DD>");
+                System.out.println("Add format: add <name> <quantity> [category] [expiry <YYYY-MM-DD>]");
                 return;
             }
             System.out.println("Nice! Added " + parts[0] + " (" + quantity + ") to the pantry.");
             }
         } catch (NumberFormatException exception) {
-            System.out.println("Quantity must be a whole number.");
+            System.out.println("Quantity '" + parts[1]
+                    + "' is invalid. Enter a positive whole number, such as 3.");
         } catch (IllegalArgumentException exception) {
-            System.out.println("Invalid item: " + exception.getMessage());
+            System.out.println("Invalid item name: " + exception.getMessage());
         }
     }
 
@@ -165,8 +165,8 @@ public class NutriByte {
         try {
             return Category.valueOf(value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
-            System.out.println("Unknown category. Use general, grains, dairy, produce, meat, canned,");
-            System.out.println("snacks, or other.");
+            System.out.println("Invalid category '" + value + "'. Choose general, grains, dairy, produce,");
+            System.out.println("meat, canned, snacks, or other.");
             return null;
         }
     }
@@ -175,7 +175,8 @@ public class NutriByte {
         try {
             return LocalDate.parse(value);
         } catch (DateTimeParseException exception) {
-            System.out.println("Expiry date must use YYYY-MM-DD format.");
+            System.out.println("Invalid expiry date '" + value
+                    + "'. Use YYYY-MM-DD and a real calendar date, such as 2026-09-15.");
             return null;
         }
     }
@@ -183,7 +184,7 @@ public class NutriByte {
     private static void changeQuantity(String[] parts, PantryService pantryService, boolean restock) {
         String command = restock ? "restock" : "consume";
         if (parts.length != 2) {
-            System.out.println("Usage: " + (restock ? "restock" : "consume") + " <name> <quantity>");
+            System.out.println("Usage: " + (restock ? "restock" : "consume") + " <name> <positive quantity>");
             return;
         }
 
@@ -196,29 +197,30 @@ public class NutriByte {
                 System.out.println((restock ? "Topped up " : "Marked as consumed ")
                         + parts[0] + " (" + quantity + ").");
             } else if (result == PantryOperationResult.INVALID_QUANTITY) {
-                System.out.println("Quantity must be greater than zero.");
+                System.out.println("Quantity must be a positive whole number. You entered " + parts[1] + ".");
             } else if (result == PantryOperationResult.INSUFFICIENT_STOCK) {
                 System.out.println("Not enough stock to consume " + quantity + " " + parts[0] + ".");
             } else {
                 System.out.println("Item not found: " + parts[0]);
             }
         } catch (NumberFormatException exception) {
-            System.out.println("Quantity must be a whole number.");
+            System.out.println("Quantity '" + parts[1]
+                    + "' is invalid. Enter a positive whole number, such as 3.");
         } catch (IllegalArgumentException exception) {
-            System.out.println("Could not update quantity: " + exception.getMessage());
+            System.out.println("Could not update quantity. " + exception.getMessage());
         }
     }
 
     private static void deleteItem(String[] parts, PantryService pantryService) {
         if (parts.length != 1) {
-            System.out.println("Usage: delete <index>");
+            System.out.println("Delete format: delete <positive pantry index>.");
             return;
         }
 
         try {
             int index = Integer.parseInt(parts[0]);
             if (index < 1 || index > pantryService.getItems().size()) {
-                System.out.println("Item number is out of range.");
+                System.out.println("Item index " + parts[0] + " is out of range. Use an index shown by 'list'.");
                 return;
             }
             PantryItem item = pantryService.getItems().get(index - 1);
@@ -226,16 +228,16 @@ public class NutriByte {
             if (result == PantryOperationResult.SUCCESS) {
                 System.out.println("Cleared item " + index + ": " + item);
             } else {
-                System.out.println("Item number is out of range.");
+                System.out.println("Item index " + parts[0] + " is out of range. Use an index shown by 'list'.");
             }
         } catch (NumberFormatException exception) {
-            System.out.println("Item number must be a whole number.");
+            System.out.println("Item index '" + parts[0] + "' is invalid. Enter a positive whole number.");
         }
     }
 
     private static void editItem(String[] parts, PantryService pantryService) {
         if (parts.length != 3) {
-            System.out.println("Usage: edit <index> name|quantity|category|expiry <value>");
+            System.out.println("Edit format: edit <index> <name|quantity|category|expiry> <value>.");
             return;
         }
         try {
@@ -244,20 +246,21 @@ public class NutriByte {
             if (result == PantryOperationResult.SUCCESS) {
                 System.out.println("Updated item " + index + "—looking good!");
             } else if (result == PantryOperationResult.INVALID_INDEX) {
-                System.out.println("Item number is out of range.");
+                System.out.println("Item index " + parts[0] + " is out of range. Use an index shown by 'list'.");
             } else if (result == PantryOperationResult.INVALID_FIELD) {
-                System.out.println("Editable fields are name, quantity, category, and expiry.");
+                System.out.println("Field '" + parts[1]
+                        + "' cannot be edited. Choose name, quantity, category, or expiry.");
             } else {
-                System.out.println("Invalid value for " + parts[1] + ".");
+                System.out.println("Value '" + parts[2] + "' is invalid for " + parts[1] + ".");
             }
         } catch (NumberFormatException exception) {
-            System.out.println("Item number must be a whole number.");
+            System.out.println("Item index '" + parts[0] + "' is invalid. Enter a positive whole number.");
         }
     }
 
     private static void searchItems(String[] parts, PantryService pantryService) {
         if (parts.length == 0) {
-            System.out.println("Usage: search <text>");
+            System.out.println("Search format: search <text>, for example search milk.");
             return;
         }
         String query = parts[0];
@@ -279,8 +282,8 @@ public class NutriByte {
 
     private static void filterItems(String[] parts, PantryService pantryService) {
         if (parts.length < 2) {
-            System.out.println("Usage: filter category <category>, expiry-before <date>, or");
-            System.out.println("expiry-between <start> <end>");
+            System.out.println("Filter format: filter category <category>, expiry-before <date>, or");
+            System.out.println("expiry-between <start YYYY-MM-DD> <end YYYY-MM-DD>.");
             return;
         }
 
@@ -298,8 +301,8 @@ public class NutriByte {
                 matches = pantryService.filterByExpiryRange(
                         LocalDate.parse(parts[1]), LocalDate.parse(parts[2]));
             } else {
-                System.out.println("Usage: filter category <category>, expiry-before <date>, or");
-                System.out.println("expiry-between <start> <end>");
+                System.out.println("Filter format: filter category <category>, expiry-before <date>, or");
+                System.out.println("expiry-between <start YYYY-MM-DD> <end YYYY-MM-DD>.");
                 return;
             }
 
@@ -316,7 +319,7 @@ public class NutriByte {
                         + "Use 'list' to see your full pantry again.");
             }
         } catch (DateTimeParseException exception) {
-            System.out.println("Expiry date must use YYYY-MM-DD format.");
+            System.out.println("Invalid expiry date. Use YYYY-MM-DD and a real calendar date, such as 2026-09-15.");
         } catch (IllegalArgumentException exception) {
             System.out.println("Invalid expiry range: " + exception.getMessage());
         }

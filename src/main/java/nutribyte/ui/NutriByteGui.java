@@ -393,14 +393,24 @@ public class NutriByteGui extends Application {
     }
 
     private boolean isError(String text) {
-        return text.startsWith("Unknown command")
+        return text.startsWith("I don't recognize")
+                || text.startsWith("Add format:")
+                || text.startsWith("Delete format:")
+                || text.startsWith("Edit format:")
+                || text.startsWith("Search format:")
+                || text.startsWith("Filter format:")
+                || text.startsWith("Unknown command")
                 || text.startsWith("Usage:")
                 || text.startsWith("Quantity must")
+                || text.startsWith("Invalid ")
                 || text.startsWith("Item not found")
                 || text.startsWith("Not enough stock")
                 || text.startsWith("Expiry date must")
                 || text.startsWith("Unknown category")
                 || text.startsWith("Item number")
+                || text.startsWith("Item index")
+                || text.startsWith("Field '")
+                || text.startsWith("Value '")
                 || text.startsWith("Editable fields")
                 || text.startsWith("Invalid value")
                 || text.startsWith("Could not");
