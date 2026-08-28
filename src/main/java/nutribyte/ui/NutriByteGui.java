@@ -1,11 +1,17 @@
 package nutribyte.ui;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -50,6 +56,7 @@ public class NutriByteGui extends Application {
     private static final String DATA_FILE_PROPERTY = "nutribyte.dataFile";
     private static final String DEFAULT_DATA_FILE = "data/pantry.txt";
     private static final DateTimeFormatter EXPIRY_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy");
+    private final CommandValidator commandValidator = new CommandValidator();
     private volatile boolean suppressItemOutput;
     private volatile PantrySelection pantrySelection = PantrySelection.all();
     private List<Integer> displayedIndexes = List.of();
@@ -159,9 +166,11 @@ public class NutriByteGui extends Application {
             PantryDisplay display = createPantryDisplay(allItems);
             pantryList.getItems().setAll(display.items());
             displayedIndexes = display.originalIndexes();
+            pantryList.setPlaceholder(new Label("Your pantry is empty. Add an item below to get started."));
         } catch (IOException | RuntimeException exception) {
             pantryList.getItems().clear();
             displayedIndexes = List.of();
+            pantryList.setPlaceholder(new Label("Unable to load pantry data. Check the file and its permissions."));
         }
     }
 
@@ -210,15 +219,32 @@ public class NutriByteGui extends Application {
     private PrintStream createGuiPrintStream(VBox conversation) {
         OutputStream outputStream = new OutputStream() {
             private final StringBuilder lineBuffer = new StringBuilder();
+            private final ByteArrayOutputStream encodedBuffer = new ByteArrayOutputStream();
 
             @Override
             public void write(int value) {
-                writeText(new String(new byte[] {(byte) value}, StandardCharsets.UTF_8));
+                write(new byte[] {(byte) value}, 0, 1);
             }
 
             @Override
             public void write(byte[] bytes, int offset, int length) {
-                writeText(new String(bytes, offset, length, StandardCharsets.UTF_8));
+                encodedBuffer.write(bytes, offset, length);
+                byte[] pendingBytes = encodedBuffer.toByteArray();
+                ByteBuffer input = ByteBuffer.wrap(pendingBytes);
+                CharBuffer output = CharBuffer.allocate(pendingBytes.length);
+                CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+                        .onMalformedInput(CodingErrorAction.REPORT)
+                        .onUnmappableCharacter(CodingErrorAction.REPORT);
+                CoderResult result = decoder.decode(input, output, false);
+                if (result.isError()) {
+                    writeText(new String(pendingBytes, StandardCharsets.UTF_8));
+                    encodedBuffer.reset();
+                    return;
+                }
+                encodedBuffer.reset();
+                encodedBuffer.write(pendingBytes, input.position(), input.remaining());
+                output.flip();
+                writeText(output.toString());
             }
 
             private void writeText(String text) {
@@ -299,112 +325,7 @@ public class NutriByteGui extends Application {
     }
 
     private boolean isValidCommandInput(String input) {
-        Parser.ParsedCommand parsedCommand = new Parser().parse(input);
-        String[] arguments = parsedCommand.arguments();
-        try {
-            return switch (parsedCommand.command()) {
-            case ADD -> isValidAddInput(arguments);
-            case CONSUME, RESTOCK -> isValidQuantityCommand(arguments);
-            case DELETE -> arguments.length == 1 && isPositiveInteger(arguments[0]);
-            case SEARCH -> arguments.length > 0;
-            case FILTER -> isValidFilterInput(arguments);
-            case EDIT -> arguments.length == 3 && isPositiveInteger(arguments[0])
-                    && isValidEditValue(arguments[1], arguments[2]);
-            case LIST, HELP, BYE, EXIT -> arguments.length == 0;
-            case UNKNOWN -> false;
-            };
-        } catch (IllegalArgumentException exception) {
-            return false;
-        }
-    }
-
-    private boolean isValidAddInput(String[] arguments) {
-        if (arguments.length < 2 || arguments.length > 5) {
-            return false;
-        }
-        if (!isValidName(arguments[0]) || !isPositiveInteger(arguments[1])) {
-            return false;
-        }
-        if (arguments.length == 2) {
-            return true;
-        }
-        if (arguments.length == 3) {
-            return isValidCategory(arguments[2]);
-        }
-        if (arguments.length == 4) {
-            return (isValidCategory(arguments[2]) || "expiry".equalsIgnoreCase(arguments[2]))
-                    && isValidDate(arguments[3]);
-        }
-        return isValidCategory(arguments[2])
-                && "expiry".equalsIgnoreCase(arguments[3])
-                && isValidDate(arguments[4]);
-    }
-
-    private boolean isValidQuantityCommand(String[] arguments) {
-        if (arguments.length == 2) {
-            return isPositiveInteger(arguments[1]);
-        }
-        return arguments.length == 3
-                && "index".equalsIgnoreCase(arguments[0])
-                && isPositiveInteger(arguments[1])
-                && isPositiveInteger(arguments[2]);
-    }
-
-    private boolean isValidName(String value) {
-        return value.matches("[\\p{L}\\p{N}](?:[\\p{L}\\p{N} -]*[\\p{L}\\p{N}])?");
-    }
-
-    private boolean isValidFilterInput(String[] arguments) {
-        if (arguments.length < 2) {
-            return false;
-        }
-        if ("category".equalsIgnoreCase(arguments[0])) {
-            return arguments.length == 2 && isValidCategory(arguments[1]);
-        }
-        if ("expiry-before".equalsIgnoreCase(arguments[0])) {
-            return arguments.length == 2 && isValidDate(arguments[1]);
-        }
-        return "expiry-between".equalsIgnoreCase(arguments[0])
-                && arguments.length == 3
-                && isValidDate(arguments[1])
-                && isValidDate(arguments[2])
-                && !LocalDate.parse(arguments[1]).isAfter(LocalDate.parse(arguments[2]));
-    }
-
-    private boolean isValidEditValue(String field, String value) {
-        return switch (field.toLowerCase(Locale.ROOT)) {
-        case "name" -> isValidName(value);
-        case "quantity" -> isPositiveInteger(value);
-        case "category" -> isValidCategory(value);
-        case "expiry" -> "none".equalsIgnoreCase(value) || isValidDate(value);
-        default -> false;
-        };
-    }
-
-    private boolean isPositiveInteger(String value) {
-        try {
-            return Integer.parseInt(value) > 0;
-        } catch (NumberFormatException exception) {
-            return false;
-        }
-    }
-
-    private boolean isValidCategory(String value) {
-        try {
-            Category.valueOf(value.toUpperCase(Locale.ROOT));
-            return true;
-        } catch (IllegalArgumentException exception) {
-            return false;
-        }
-    }
-
-    private boolean isValidDate(String value) {
-        try {
-            LocalDate.parse(value);
-            return true;
-        } catch (java.time.format.DateTimeParseException exception) {
-            return false;
-        }
+        return commandValidator.isValidCommandInput(input);
     }
 
     private boolean isError(String text) {
