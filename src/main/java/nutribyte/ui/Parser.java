@@ -80,5 +80,13 @@ public class Parser {
      * @param arguments command arguments
      */
     public record ParsedCommand(Command command, String[] arguments) {
+        public ParsedCommand {
+            arguments = arguments == null ? new String[0] : arguments.clone();
+        }
+
+        @Override
+        public String[] arguments() {
+            return arguments.clone();
+        }
     }
 }

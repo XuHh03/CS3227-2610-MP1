@@ -74,4 +74,14 @@ class ParserTest {
         assertEquals(Parser.Command.ADD, result.command());
         assertArrayEquals(new String[] {"Fresh Milk", "2", "dairy"}, result.arguments());
     }
+
+    @Test
+    void parsedCommand_argumentsAreDefensivelyCopied() {
+        Parser.ParsedCommand result = parser.parse("add rice 3");
+        String[] arguments = result.arguments();
+
+        arguments[0] = "changed";
+
+        assertArrayEquals(new String[] {"rice", "3"}, result.arguments());
+    }
 }
