@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -26,11 +27,13 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import nutribyte.model.Category;
@@ -44,6 +47,7 @@ public class NutriByteGui extends Application {
     private static final String DATA_FILE_PROPERTY = "nutribyte.dataFile";
     private static final String DEFAULT_DATA_FILE = "data/pantry.txt";
     private static final DateTimeFormatter EXPIRY_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy");
+    private volatile boolean suppressListOutput;
 
     /**
      * Starts the pantry display and command input controls.
@@ -58,21 +62,23 @@ public class NutriByteGui extends Application {
 
         Label title = new Label("NutriByte Pantry");
         title.setText("NutriByte • Byte's Pantry");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #19324d;");
+        title.getStyleClass().add("page-title");
         Label subtitle = new Label("Your upbeat sidekick for fresh, tidy shelves.");
-        subtitle.setStyle("-fx-font-size: 13px; -fx-text-fill: #617387;");
+        subtitle.getStyleClass().add("page-subtitle");
         VBox heading = new VBox(3, title, subtitle);
+        heading.getStyleClass().add("page-heading");
 
         Label pantryLabel = new Label("YOUR PANTRY");
-        pantryLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #617387;");
-        VBox pantrySection = new VBox(8, pantryLabel, pantryList);
-        VBox.setVgrow(pantryList, Priority.ALWAYS);
+        pantryLabel.getStyleClass().add("section-label");
+        StackPane pantrySurface = createPantrySurface(pantryList);
+        VBox pantrySection = new VBox(8, pantryLabel, pantrySurface);
+        VBox.setVgrow(pantrySurface, Priority.ALWAYS);
 
         TextField commandField = new TextField();
         commandField.setPromptText("Ask Byte: add rice 3 grains 2026-12-01");
-        commandField.setPrefHeight(38);
+        commandField.getStyleClass().add("command-field");
         Button runButton = new Button("Run");
-        runButton.setPrefHeight(38);
+        runButton.getStyleClass().add("run-button");
         runButton.setDefaultButton(true);
         HBox commandBar = new HBox(8, commandField, runButton);
         HBox.setHgrow(commandField, Priority.ALWAYS);
@@ -81,8 +87,8 @@ public class NutriByteGui extends Application {
         layout.setTop(heading);
         layout.setCenter(pantrySection);
         layout.setBottom(new VBox(8, conversationScroll, commandBar));
-        layout.setPadding(new Insets(20));
-        layout.setStyle("-fx-background-color: #f4f7fb;");
+        layout.getStyleClass().add("app-root");
+        layout.getStylesheets().add(getClass().getResource("/main.css").toExternalForm());
         BorderPane.setMargin(pantrySection, new Insets(18, 0, 14, 0));
 
         stage.setTitle("NutriByte");
@@ -102,17 +108,29 @@ public class NutriByteGui extends Application {
     private ListView<PantryItem> createPantryList() {
         ListView<PantryItem> pantryList = new ListView<>();
         pantryList.setPlaceholder(new Label("Your pantry is empty. Add an item below to get started."));
-        pantryList.setStyle("-fx-background-color: white; -fx-control-inner-background: white;"
-                + " -fx-border-color: #d9e2ec; -fx-border-radius: 10; -fx-background-radius: 10;");
+        pantryList.getStyleClass().add("pantry-list");
         pantryList.setCellFactory(list -> new PantryItemCell());
         return pantryList;
     }
 
+    private StackPane createPantrySurface(ListView<PantryItem> pantryList) {
+        ImageView shelfImage = new ImageView(new Image(getClass()
+                .getResourceAsStream("/images/background.jpeg")));
+        shelfImage.setPreserveRatio(true);
+        shelfImage.setSmooth(true);
+        shelfImage.getStyleClass().add("shelf-image");
+        shelfImage.fitWidthProperty().bind(pantryList.widthProperty().multiply(0.8));
+        shelfImage.fitHeightProperty().bind(pantryList.heightProperty().multiply(0.95));
+        shelfImage.setMouseTransparent(true);
+
+        StackPane pantrySurface = new StackPane(shelfImage, pantryList);
+        pantrySurface.getStyleClass().add("pantry-surface");
+        return pantrySurface;
+    }
+
     private VBox createConversation() {
         VBox conversation = new VBox(6);
-        conversation.setPadding(new Insets(10, 12, 10, 12));
-        conversation.setStyle("-fx-background-color: white; -fx-background-radius: 10;"
-                + " -fx-border-color: #d9e2ec; -fx-border-radius: 10;");
+        conversation.getStyleClass().add("conversation");
         return conversation;
     }
 
@@ -123,6 +141,7 @@ public class NutriByteGui extends Application {
         conversationScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         conversationScroll.setPrefViewportHeight(170);
         conversationScroll.setMaxHeight(210);
+        conversationScroll.getStyleClass().add("conversation-scroll");
         conversation.heightProperty().addListener((observable, oldHeight, newHeight) ->
                 conversationScroll.setVvalue(1.0));
         return conversationScroll;
@@ -182,7 +201,7 @@ public class NutriByteGui extends Application {
                 while ((newline = lineBuffer.indexOf("\n")) >= 0) {
                     String line = lineBuffer.substring(0, newline).stripTrailing();
                     lineBuffer.delete(0, newline + 1);
-                    if (!line.startsWith("Pantry items:") && !line.matches("\\d+\\..*")) {
+                    if (shouldDisplayOutput(line)) {
                         appendMessage(conversation, line, isError(line), false);
                     }
                 }
@@ -196,14 +215,111 @@ public class NutriByteGui extends Application {
         if (command.isEmpty()) {
             return;
         }
+        boolean validCommandInput = isValidCommandInput(command);
+        String commandName = command.split("\\s+", 2)[0].toLowerCase(Locale.ROOT);
+        suppressListOutput = "list".equals(commandName);
         conversation.getChildren().clear();
         appendMessage(conversation, command, false, true);
         try {
             commandWriter.write((command + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
             commandWriter.flush();
-            commandField.clear();
+            if (validCommandInput) {
+                commandField.clear();
+            }
         } catch (IOException exception) {
             appendMessage(conversation, "Unable to send command.", true, false);
+        }
+    }
+
+    private boolean shouldDisplayOutput(String line) {
+        if (!suppressListOutput) {
+            return true;
+        }
+        return !line.startsWith("Pantry items:")
+                && !line.startsWith("Here's what's on your shelves:")
+                && !line.matches("\\d+\\..*");
+    }
+
+    private boolean isValidCommandInput(String input) {
+        Parser.ParsedCommand parsedCommand = new Parser().parse(input);
+        String[] arguments = parsedCommand.arguments();
+        try {
+            return switch (parsedCommand.command()) {
+            case ADD -> isValidAddInput(arguments);
+            case CONSUME, RESTOCK -> arguments.length == 2 && isPositiveInteger(arguments[1]);
+            case DELETE -> arguments.length == 1 && isPositiveInteger(arguments[0]);
+            case SEARCH -> arguments.length > 0;
+            case FILTER -> isValidFilterInput(arguments);
+            case EDIT -> arguments.length == 3 && isPositiveInteger(arguments[0])
+                    && isValidEditValue(arguments[1], arguments[2]);
+            case LIST, HELP, BYE, EXIT -> arguments.length == 0;
+            case UNKNOWN -> false;
+            };
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
+    private boolean isValidAddInput(String[] arguments) {
+        if (arguments.length != 2 && arguments.length != 4) {
+            return false;
+        }
+        if (!isPositiveInteger(arguments[1])) {
+            return false;
+        }
+        return arguments.length == 2
+                || isValidCategory(arguments[2]) && isValidDate(arguments[3]);
+    }
+
+    private boolean isValidFilterInput(String[] arguments) {
+        if (arguments.length < 2) {
+            return false;
+        }
+        if ("category".equalsIgnoreCase(arguments[0])) {
+            return arguments.length == 2 && isValidCategory(arguments[1]);
+        }
+        if ("expiry-before".equalsIgnoreCase(arguments[0])) {
+            return arguments.length == 2 && isValidDate(arguments[1]);
+        }
+        return "expiry-between".equalsIgnoreCase(arguments[0])
+                && arguments.length == 3
+                && isValidDate(arguments[1])
+                && isValidDate(arguments[2]);
+    }
+
+    private boolean isValidEditValue(String field, String value) {
+        return switch (field.toLowerCase(Locale.ROOT)) {
+        case "name" -> !value.isBlank();
+        case "quantity" -> isPositiveInteger(value);
+        case "category" -> isValidCategory(value);
+        case "expiry" -> "none".equalsIgnoreCase(value) || isValidDate(value);
+        default -> false;
+        };
+    }
+
+    private boolean isPositiveInteger(String value) {
+        try {
+            return Integer.parseInt(value) > 0;
+        } catch (NumberFormatException exception) {
+            return false;
+        }
+    }
+
+    private boolean isValidCategory(String value) {
+        try {
+            Category.valueOf(value.toUpperCase(Locale.ROOT));
+            return true;
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
+    private boolean isValidDate(String value) {
+        try {
+            LocalDate.parse(value);
+            return true;
+        } catch (java.time.format.DateTimeParseException exception) {
+            return false;
         }
     }
 
@@ -230,7 +346,7 @@ public class NutriByteGui extends Application {
                 Label previousMessage = (Label) conversation.getChildren()
                         .get(conversation.getChildren().size() - 1);
                 if ("app-message".equals(previousMessage.getId())
-                        || (error && "error-message".equals(previousMessage.getId()))) {
+                        || "error-message".equals(previousMessage.getId())) {
                     previousMessage.setText(previousMessage.getText() + System.lineSeparator() + text);
                     return;
                 }
@@ -238,28 +354,37 @@ public class NutriByteGui extends Application {
             Label message = new Label(text);
             message.setWrapText(true);
             message.setMaxWidth(Double.MAX_VALUE);
-            message.setPadding(new Insets(7, 10, 7, 10));
             if (userMessage) {
                 message.setId("user-message");
                 message.setAlignment(Pos.CENTER_RIGHT);
-                message.setTextFill(Color.WHITE);
-                message.setStyle("-fx-background-color: #2f6fed; -fx-background-radius: 12 12 3 12;");
+                message.setGraphic(createAvatar("/images/user.png"));
+                message.setContentDisplay(ContentDisplay.RIGHT);
+                message.getStyleClass().add("user-message");
                 VBox.setMargin(message, new Insets(0, 0, 0, 80));
             } else if (error) {
                 message.setId("error-message");
-                message.setTextFill(Color.web("#9b2c2c"));
-                message.setStyle("-fx-background-color: #fff0f0; -fx-background-radius: 8;"
-                        + " -fx-border-color: #f2b8b8; -fx-border-radius: 8;");
+                message.setGraphic(createAvatar("/images/bot.jpeg"));
+                message.setContentDisplay(ContentDisplay.LEFT);
+                message.getStyleClass().add("error-message");
                 VBox.setMargin(message, new Insets(0, 25, 0, 0));
             } else {
                 message.setId("app-message");
-                message.setTextFill(Color.web("#34495e"));
-                message.setStyle("-fx-background-color: #eef3f8; -fx-background-radius: 8;"
-                        + " -fx-font-size: 14px;");
+                message.setGraphic(createAvatar("/images/bot.jpeg"));
+                message.setContentDisplay(ContentDisplay.LEFT);
+                message.getStyleClass().add("app-message");
                 VBox.setMargin(message, new Insets(0, 25, 0, 0));
             }
             conversation.getChildren().add(message);
         });
+    }
+
+    private ImageView createAvatar(String resourcePath) {
+        ImageView avatar = new ImageView(new Image(getClass().getResourceAsStream(resourcePath)));
+        avatar.setFitWidth(30);
+        avatar.setFitHeight(30);
+        avatar.setPreserveRatio(false);
+        avatar.setClip(new javafx.scene.shape.Circle(15, 15, 15));
+        return avatar;
     }
 
     /**
@@ -272,22 +397,22 @@ public class NutriByteGui extends Application {
             if (empty || item == null) {
                 setText(null);
                 setGraphic(null);
-                setStyle("-fx-background-color: white;");
+                getStyleClass().add("item-cell");
                 return;
             }
 
             Label index = new Label((getIndex() + 1) + ".");
             index.setMinWidth(30);
-            index.setStyle("-fx-font-weight: bold; -fx-text-fill: #718096;");
+            index.getStyleClass().add("item-index");
 
             Label name = new Label(item.getName());
-            name.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #19324d;");
+            name.getStyleClass().add("item-name");
             Label quantity = new Label("Qty: " + item.getQuantity());
-            quantity.setStyle("-fx-font-size: 13px; -fx-text-fill: #617387;");
+            quantity.getStyleClass().add("item-quantity");
             HBox title = new HBox(10, name, quantity);
             title.setAlignment(Pos.CENTER_LEFT);
 
-            Label category = createBadge(item.getCategory().name(), categoryColor(item.getCategory()));
+            Label category = createBadge(item.getCategory().name(), categoryStyleClass(item.getCategory()));
             Label expiry = createExpiryBadge(item.getExpiryDate());
             HBox metadata = new HBox(8, category, expiry);
             metadata.setAlignment(Pos.CENTER_LEFT);
@@ -298,39 +423,36 @@ public class NutriByteGui extends Application {
             setText(null);
             setGraphic(row);
             setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            setPrefHeight(68);
-            setStyle("-fx-background-color: white; -fx-padding: 8px 12px;");
+            getStyleClass().add("item-cell");
         }
 
-        private Label createBadge(String text, String color) {
+        private Label createBadge(String text, String styleClass) {
             Label badge = new Label(text);
-            badge.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 10;"
-                    + " -fx-padding: 3px 8px; -fx-font-size: 11px; -fx-font-weight: bold;");
-            badge.setTextFill(Color.WHITE);
+            badge.getStyleClass().addAll("badge", styleClass);
             return badge;
         }
 
         private Label createExpiryBadge(LocalDate expiryDate) {
             if (expiryDate == null) {
-                return createBadge("No expiry date", "#718096");
+                return createBadge("No expiry date", "expiry-none");
             }
             LocalDate today = LocalDate.now();
             String status = expiryDate.isBefore(today) ? "Expired: "
                     : expiryDate.isEqual(today) ? "Expires today: " : "Expires: ";
-            String color = expiryDate.isBefore(today) ? "#c53030"
-                    : !expiryDate.isAfter(today.plusDays(7)) ? "#dd6b20" : "#2f855a";
-            return createBadge(status + expiryDate.format(EXPIRY_FORMAT), color);
+            String styleClass = expiryDate.isBefore(today) ? "expiry-expired"
+                    : !expiryDate.isAfter(today.plusDays(7)) ? "expiry-soon" : "expiry-safe";
+            return createBadge(status + expiryDate.format(EXPIRY_FORMAT), styleClass);
         }
 
-        private String categoryColor(Category category) {
+        private String categoryStyleClass(Category category) {
             return switch (category) {
-            case DAIRY -> "#805ad5";
-            case PRODUCE -> "#0f766e";
-            case GRAINS -> "#b7791f";
-            case MEAT -> "#c53030";
-            case CANNED -> "#3182ce";
-            case SNACKS -> "#dd6b20";
-            case GENERAL, OTHER -> "#718096";
+            case DAIRY -> "category-dairy";
+            case PRODUCE -> "category-produce";
+            case GRAINS -> "category-grains";
+            case MEAT -> "category-meat";
+            case CANNED -> "category-canned";
+            case SNACKS -> "category-snacks";
+            case GENERAL, OTHER -> "category-neutral";
             };
         }
     }
