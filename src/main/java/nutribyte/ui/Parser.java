@@ -1,5 +1,7 @@
 package nutribyte.ui;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -21,17 +23,38 @@ public class Parser {
             return new ParsedCommand(Command.UNKNOWN, new String[0]);
         }
 
-        String[] parts = trimmedInput.split("\\s+");
+        List<String> parts = splitArguments(trimmedInput);
         Command command;
         try {
-            command = Command.valueOf(parts[0].toUpperCase(Locale.ROOT));
+            command = Command.valueOf(parts.get(0).toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
             command = Command.UNKNOWN;
         }
 
-        String[] arguments = new String[parts.length - 1];
-        System.arraycopy(parts, 1, arguments, 0, arguments.length);
+        String[] arguments = parts.subList(1, parts.size()).toArray(String[]::new);
         return new ParsedCommand(command, arguments);
+    }
+
+    private List<String> splitArguments(String input) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder currentPart = new StringBuilder();
+        boolean insideQuotes = false;
+        for (char character : input.toCharArray()) {
+            if (character == '"') {
+                insideQuotes = !insideQuotes;
+            } else if (Character.isWhitespace(character) && !insideQuotes) {
+                if (!currentPart.isEmpty()) {
+                    parts.add(currentPart.toString());
+                    currentPart.setLength(0);
+                }
+            } else {
+                currentPart.append(character);
+            }
+        }
+        if (!currentPart.isEmpty()) {
+            parts.add(currentPart.toString());
+        }
+        return parts;
     }
 
     /** Supported NutriByte commands. */

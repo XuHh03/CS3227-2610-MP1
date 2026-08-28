@@ -66,4 +66,12 @@ class ParserTest {
         assertEquals(Parser.Command.EDIT, result.command());
         assertArrayEquals(new String[] {"1", "quantity", "5"}, result.arguments());
     }
+
+    @Test
+    void parse_quotedMultiWordName_keepsNameAsOneArgument() {
+        Parser.ParsedCommand result = parser.parse("add \"Fresh Milk\" 2 dairy");
+
+        assertEquals(Parser.Command.ADD, result.command());
+        assertArrayEquals(new String[] {"Fresh Milk", "2", "dairy"}, result.arguments());
+    }
 }
