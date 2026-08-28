@@ -44,7 +44,7 @@ class UiTest {
         String populatedOutput = captureOutput(() -> ui.showItems(List.of(milk)));
 
         assertTrue(emptyOutput.contains("Your pantry is empty"));
-        assertTrue(populatedOutput.contains("Here's everything in your pantry"));
+        assertTrue(populatedOutput.contains("There's everything in your pantry above"));
         assertTrue(populatedOutput.contains("1. Milk (2) [dairy, expires 2026-09-15]"));
     }
 

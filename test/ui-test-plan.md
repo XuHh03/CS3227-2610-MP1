@@ -152,6 +152,7 @@ Expected result:
 - The unknown-command error appears in one distinct red-tinted message box.
 - An unrecognized command remains in the input field so it can be corrected and resubmitted.
 - A recognized command with invalid arguments, such as `add 3 milk`, also remains in the input field.
+- Error messages identify the invalid value and show the expected format or a valid example.
 - Leading/trailing or repeated whitespace does not crash the parser and is handled consistently.
 - Invalid names, non-positive quantities, malformed dates, and unknown categories show a clear error.
 - A reversed expiry range shows an error instead of silently returning an empty result.
