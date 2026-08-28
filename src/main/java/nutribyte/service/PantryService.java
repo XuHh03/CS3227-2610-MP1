@@ -28,7 +28,9 @@ public class PantryService {
      * @param initialItems items to place in the pantry
      */
     public PantryService(List<PantryItem> initialItems) {
-        assert initialItems != null : "Loaded pantry items must not be null";
+        if (initialItems == null || initialItems.stream().anyMatch(item -> item == null)) {
+            throw new IllegalArgumentException("Loaded pantry items must not be null.");
+        }
         items.addAll(initialItems);
     }
 

@@ -88,4 +88,11 @@ class PantryStorageTest {
         assertTrue(Files.exists(file));
         assertTrue(Files.readString(file).isEmpty());
     }
+
+    @Test
+    void save_nullItems_rejectsInput() {
+        PantryStorage storage = new PantryStorage(temporaryDirectory.resolve("pantry.txt"));
+
+        assertThrows(IllegalArgumentException.class, () -> storage.save(null));
+    }
 }

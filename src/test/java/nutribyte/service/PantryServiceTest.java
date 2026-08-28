@@ -263,6 +263,11 @@ class PantryServiceTest {
     }
 
     @Test
+    void constructor_nullItems_rejectsInput() {
+        assertThrows(IllegalArgumentException.class, () -> new PantryService(null));
+    }
+
+    @Test
     void getItems_modificationAttempt_throwsUnsupportedOperationException() {
         PantryService pantryService = new PantryService();
         pantryService.addItem("Milk", 5);

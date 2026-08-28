@@ -23,6 +23,9 @@ public class PantryStorage {
      * @param filePath file used to save and load pantry data
      */
     public PantryStorage(Path filePath) {
+        if (filePath == null) {
+            throw new IllegalArgumentException("Pantry data file path must not be null.");
+        }
         this.filePath = filePath;
     }
 
@@ -60,6 +63,9 @@ public class PantryStorage {
      * @throws IOException if the file cannot be written
      */
     public void save(List<PantryItem> items) throws IOException {
+        if (items == null) {
+            throw new IllegalArgumentException("Pantry items must not be null.");
+        }
         Path parent = filePath.getParent();
         if (parent != null) {
             Files.createDirectories(parent);
@@ -67,8 +73,9 @@ public class PantryStorage {
 
         List<String> lines = new ArrayList<>();
         for (PantryItem item : items) {
-            assert item != null : "The pantry must not contain null items when saving";
-            assert item.getCategory() != null : "Every persisted item must have a category";
+            if (item == null || item.getCategory() == null) {
+                throw new IllegalArgumentException("Every persisted item must have a category.");
+            }
             String expiry = item.getExpiryDate() == null ? "" : item.getExpiryDate().toString();
             lines.add(item.getName() + "\t" + item.getQuantity() + "\t"
                     + item.getCategory().name() + "\t" + expiry);
