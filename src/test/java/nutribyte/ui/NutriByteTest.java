@@ -36,6 +36,17 @@ class NutriByteTest {
         assertTrue(output.contains("1. rice (3)"));
     }
 
+    @Test
+    void main_addCommand_acceptsOptionalCategoryAndExpiryIndependently() {
+        String output = runApplication("add milk 2 dairy\n"
+                + "add rice 3 expiry 2026-12-01\n"
+                + "add beans 4 canned expiry 2027-01-01\nlist\nbye\n");
+
+        assertTrue(output.contains("milk (2) [dairy]"));
+        assertTrue(output.contains("rice (3) [general, expires 2026-12-01]"));
+        assertTrue(output.contains("beans (4) [canned, expires 2027-01-01]"));
+    }
+
     private String runApplication(String input) {
         String propertyName = "nutribyte.dataFile";
         String previousDataFile = System.getProperty(propertyName);

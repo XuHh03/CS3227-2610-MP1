@@ -17,6 +17,15 @@ continue to pass as regression tests, and each new user-facing feature must
 have at least one corresponding test case before the increment is considered
 complete.
 
+The add command supports these forms:
+
+```text
+add <name> <quantity>
+add <name> <quantity> <category>
+add <name> <quantity> expiry <YYYY-MM-DD>
+add <name> <quantity> <category> expiry <YYYY-MM-DD>
+```
+
 ## Manual GUI compatibility checks
 
 The JavaFX GUI is manually tested on Ubuntu, macOS, and Windows using the
@@ -110,6 +119,8 @@ Expected result:
 - The command field accepts both the Run button and the Enter key.
 - The conversation panel shows only the most recently submitted command and its response.
 - Search and filter results, including their numbered items, appear in the conversation panel.
+- Search and filter results replace the pantry view while retaining their original pantry indexes.
+- Byte explains that `list` restores the complete pantry view.
 
 ## GUI-003 — Distinguish user commands and errors
 

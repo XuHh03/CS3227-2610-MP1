@@ -23,6 +23,7 @@ class UiTest {
 
         assertTrue(output.contains("Byte, your pantry sidekick"));
         assertTrue(output.contains("delete <index>"));
+        assertTrue(output.contains("expiry <YYYY-MM-DD>"));
     }
 
     @Test
@@ -31,6 +32,7 @@ class UiTest {
 
         assertTrue(output.contains("Byte's pantry toolkit:"));
         assertTrue(output.contains("Stock up your pantry."));
+        assertTrue(output.contains("add <name> <quantity> <category> expiry <YYYY-MM-DD>"));
         assertTrue(output.contains("Let Byte know you're done for now."));
     }
 
@@ -42,7 +44,7 @@ class UiTest {
         String populatedOutput = captureOutput(() -> ui.showItems(List.of(milk)));
 
         assertTrue(emptyOutput.contains("Your pantry is empty"));
-        assertTrue(populatedOutput.contains("Here's what's on your shelves:"));
+        assertTrue(populatedOutput.contains("Here's everything in your pantry"));
         assertTrue(populatedOutput.contains("1. Milk (2) [dairy, expires 2026-09-15]"));
     }
 
