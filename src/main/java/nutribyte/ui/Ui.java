@@ -14,7 +14,8 @@ public class Ui {
     public void showGreeting() {
         System.out.println("Hey! I'm Byte, your pantry sidekick.");
         System.out.println("Ready to keep your shelves fresh?");
-        System.out.println("Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],");
+        System.out.println("Commands: add <name> <quantity> [category], expiry <YYYY-MM-DD>,");
+        System.out.println("          add <name> <quantity> <category> expiry <YYYY-MM-DD>,");
         System.out.println("          restock <name> <quantity>, delete <index>, search <text>,");
         System.out.println("          filter category|expiry-before|expiry-between, edit <index> <field> <value>,");
         System.out.println("          help, list, bye");
@@ -25,7 +26,10 @@ public class Ui {
      */
     public void showHelp() {
         System.out.println("Byte's pantry toolkit:");
-        System.out.println("  add <name> <quantity> [category] [expiry YYYY-MM-DD]");
+        System.out.println("  add <name> <quantity>");
+        System.out.println("  add <name> <quantity> <category>");
+        System.out.println("  add <name> <quantity> expiry <YYYY-MM-DD>");
+        System.out.println("  add <name> <quantity> <category> expiry <YYYY-MM-DD>");
         System.out.println("      Stock up your pantry.");
         System.out.println("  list");
         System.out.println("      Take a quick look at your shelves.");
@@ -62,7 +66,7 @@ public class Ui {
             return;
         }
 
-        System.out.println("Here's what's on your shelves:");
+        System.out.println("There's everything in your pantry above");
         int itemNumber = 1;
         for (PantryItem item : items) {
             System.out.println(itemNumber + ". " + item);

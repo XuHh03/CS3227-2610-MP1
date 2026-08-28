@@ -103,8 +103,10 @@ public class NutriByte {
     }
 
     private static void addItem(String[] parts, PantryService pantryService) {
-        if (parts.length != 2 && parts.length != 4) {
-            System.out.println("Usage: add <name> <quantity> [category] [expiry YYYY-MM-DD]");
+        if (parts.length < 2 || parts.length > 5
+                || parts.length == 4 && !"expiry".equalsIgnoreCase(parts[2])
+                && !isCategory(parts[2])) {
+            System.out.println("Usage: add <name> <quantity> [category], expiry <YYYY-MM-DD>");
             return;
         }
 
@@ -115,15 +117,30 @@ public class NutriByte {
             } else {
             if (parts.length == 2) {
                 pantryService.addItem(parts[0], quantity);
-            } else if (parts.length == 4) {
+            } else if (parts.length == 3) {
                 Category category = parseCategory(parts[2]);
+                if (category == null) {
+                    return;
+                }
+                pantryService.addItem(parts[0], quantity, category, null);
+            } else if (parts.length == 4) {
+                Category category = "expiry".equalsIgnoreCase(parts[2])
+                        ? Category.GENERAL : parseCategory(parts[2]);
                 LocalDate expiryDate = parseExpiryDate(parts[3]);
                 if (category == null || expiryDate == null) {
                     return;
                 }
                 pantryService.addItem(parts[0], quantity, category, expiryDate);
+            } else if (parts.length == 5) {
+                Category category = parseCategory(parts[2]);
+                LocalDate expiryDate = "expiry".equalsIgnoreCase(parts[3])
+                        ? parseExpiryDate(parts[4]) : null;
+                if (category == null || expiryDate == null) {
+                    return;
+                }
+                pantryService.addItem(parts[0], quantity, category, expiryDate);
             } else {
-                System.out.println("Usage: add <name> <quantity> [category] [expiry YYYY-MM-DD]");
+                System.out.println("Usage: add <name> <quantity> [category], expiry <YYYY-MM-DD>");
                 return;
             }
             System.out.println("Nice! Added " + parts[0] + " (" + quantity + ") to the pantry.");
@@ -132,6 +149,15 @@ public class NutriByte {
             System.out.println("Quantity must be a whole number.");
         } catch (IllegalArgumentException exception) {
             System.out.println("Invalid item: " + exception.getMessage());
+        }
+    }
+
+    private static boolean isCategory(String value) {
+        try {
+            Category.valueOf(value.toUpperCase(Locale.ROOT));
+            return true;
+        } catch (IllegalArgumentException exception) {
+            return false;
         }
     }
 
@@ -247,6 +273,8 @@ public class NutriByte {
             System.out.println(itemNumber + ". " + item);
             itemNumber++;
         }
+        System.out.println("Here you go! The matching items are shown above. "
+                + "Use 'list' to see your full pantry again.");
     }
 
     private static void filterItems(String[] parts, PantryService pantryService) {
@@ -284,6 +312,8 @@ public class NutriByte {
                     System.out.println(itemNumber + ". " + item);
                     itemNumber++;
                 }
+                System.out.println("Here you go! The matching items are shown above. "
+                        + "Use 'list' to see your full pantry again.");
             }
         } catch (DateTimeParseException exception) {
             System.out.println("Expiry date must use YYYY-MM-DD format.");
