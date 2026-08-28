@@ -108,7 +108,7 @@ class NutriByteTest {
             System.setIn(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
             System.setOut(new PrintStream(output, true, StandardCharsets.UTF_8));
             NutriByte.main(new String[0]);
-            return output.toString(StandardCharsets.UTF_8);
+            return output.toString(StandardCharsets.UTF_8).replace("\r\n", "\n");
         } finally {
             System.setOut(originalOutput);
             System.setIn(originalInput);
