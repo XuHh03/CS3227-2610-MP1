@@ -1,18 +1,6 @@
 package nutribyte.ui;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CoderResult;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -171,76 +159,24 @@ public class NutriByteGui extends Application {
     }
 
     private void connectCli(TextField commandField, Button runButton, VBox conversation, Stage stage) {
-        PrintStream originalOutput = System.out;
-        InputStream originalInput = System.in;
-        PipedOutputStream commandWriter = new PipedOutputStream();
+        GuiCliBridge cliBridge = new GuiCliBridge(line -> {
+            if (shouldDisplayOutput(line)) {
+                appendMessage(conversation, line, isError(line), false);
+            }
+        });
         try {
-            PipedInputStream commandReader = new PipedInputStream(commandWriter);
-            System.setOut(createGuiPrintStream(conversation));
-            System.setIn(commandReader);
-            Thread commandThread = new Thread(() -> {
-                NutriByte.main(new String[0]);
-                System.setOut(originalOutput);
-                System.setIn(originalInput);
-            }, "nutribyte-cli");
-            commandThread.setDaemon(true);
-            commandThread.start();
+            cliBridge.start();
         } catch (IOException exception) {
             appendMessage(conversation, "Unable to start command input.", true, false);
         }
 
-        Runnable submitCommand = () -> sendCommand(commandField, commandWriter, conversation, stage);
+        stage.setOnHidden(event -> cliBridge.close());
+        Runnable submitCommand = () -> sendCommand(commandField, cliBridge, conversation, stage);
         runButton.setOnAction(event -> submitCommand.run());
         commandField.setOnAction(event -> submitCommand.run());
     }
 
-    private PrintStream createGuiPrintStream(VBox conversation) {
-        OutputStream outputStream = new OutputStream() {
-            private final StringBuilder lineBuffer = new StringBuilder();
-            private final ByteArrayOutputStream encodedBuffer = new ByteArrayOutputStream();
-
-            @Override
-            public void write(int value) {
-                write(new byte[] {(byte) value}, 0, 1);
-            }
-
-            @Override
-            public void write(byte[] bytes, int offset, int length) {
-                encodedBuffer.write(bytes, offset, length);
-                byte[] pendingBytes = encodedBuffer.toByteArray();
-                ByteBuffer input = ByteBuffer.wrap(pendingBytes);
-                CharBuffer output = CharBuffer.allocate(pendingBytes.length);
-                CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
-                        .onMalformedInput(CodingErrorAction.REPORT)
-                        .onUnmappableCharacter(CodingErrorAction.REPORT);
-                CoderResult result = decoder.decode(input, output, false);
-                if (result.isError()) {
-                    writeText(new String(pendingBytes, StandardCharsets.UTF_8));
-                    encodedBuffer.reset();
-                    return;
-                }
-                encodedBuffer.reset();
-                encodedBuffer.write(pendingBytes, input.position(), input.remaining());
-                output.flip();
-                writeText(output.toString());
-            }
-
-            private void writeText(String text) {
-                lineBuffer.append(text);
-                int newline;
-                while ((newline = lineBuffer.indexOf("\n")) >= 0) {
-                    String line = lineBuffer.substring(0, newline).stripTrailing();
-                    lineBuffer.delete(0, newline + 1);
-                    if (shouldDisplayOutput(line)) {
-                        appendMessage(conversation, line, isError(line), false);
-                    }
-                }
-            }
-        };
-        return new PrintStream(outputStream, true, StandardCharsets.UTF_8);
-    }
-
-    private void sendCommand(TextField commandField, PipedOutputStream commandWriter,
+    private void sendCommand(TextField commandField, GuiCliBridge cliBridge,
             VBox conversation, Stage stage) {
         String command = commandField.getText().trim();
         if (command.isEmpty()) {
@@ -258,8 +194,7 @@ public class NutriByteGui extends Application {
         conversation.getChildren().clear();
         appendMessage(conversation, command, false, true);
         try {
-            commandWriter.write((command + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
-            commandWriter.flush();
+            cliBridge.send(command);
             if (validCommandInput) {
                 commandField.clear();
             }
