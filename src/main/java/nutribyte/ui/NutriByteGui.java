@@ -10,8 +10,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -38,6 +40,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import nutribyte.model.Category;
 import nutribyte.model.PantryItem;
+import nutribyte.service.PantryService;
 import nutribyte.storage.PantryStorage;
 
 /**
@@ -47,7 +50,9 @@ public class NutriByteGui extends Application {
     private static final String DATA_FILE_PROPERTY = "nutribyte.dataFile";
     private static final String DEFAULT_DATA_FILE = "data/pantry.txt";
     private static final DateTimeFormatter EXPIRY_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy");
-    private volatile boolean suppressListOutput;
+    private volatile boolean suppressItemOutput;
+    private volatile PantrySelection pantrySelection = PantrySelection.all();
+    private List<Integer> displayedIndexes = List.of();
 
     /**
      * Starts the pantry display and command input controls.
@@ -75,7 +80,7 @@ public class NutriByteGui extends Application {
         VBox.setVgrow(pantrySurface, Priority.ALWAYS);
 
         TextField commandField = new TextField();
-        commandField.setPromptText("Ask Byte: add rice 3 grains 2026-12-01");
+        commandField.setPromptText("Ask Byte: add rice 3 grains expiry 2026-12-01");
         commandField.getStyleClass().add("command-field");
         Button runButton = new Button("Run");
         runButton.getStyleClass().add("run-button");
@@ -114,8 +119,8 @@ public class NutriByteGui extends Application {
     }
 
     private StackPane createPantrySurface(ListView<PantryItem> pantryList) {
-        ImageView shelfImage = new ImageView(new Image(getClass()
-                .getResourceAsStream("/images/background.jpeg")));
+        ImageView shelfImage = new ImageView(new Image(Objects.requireNonNull(getClass()
+                .getResourceAsStream("/images/background.jpeg"))));
         shelfImage.setPreserveRatio(true);
         shelfImage.setSmooth(true);
         shelfImage.getStyleClass().add("shelf-image");
@@ -150,11 +155,32 @@ public class NutriByteGui extends Application {
     private void refreshPantryList(ListView<PantryItem> pantryList) {
         Path dataPath = Path.of(System.getProperty(DATA_FILE_PROPERTY, DEFAULT_DATA_FILE));
         try {
-            List<PantryItem> items = new PantryStorage(dataPath).load();
-            pantryList.getItems().setAll(items);
+            List<PantryItem> allItems = new PantryStorage(dataPath).load();
+            PantryDisplay display = createPantryDisplay(allItems);
+            pantryList.getItems().setAll(display.items());
+            displayedIndexes = display.originalIndexes();
         } catch (IOException | RuntimeException exception) {
             pantryList.getItems().clear();
+            displayedIndexes = List.of();
         }
+    }
+
+    private PantryDisplay createPantryDisplay(List<PantryItem> allItems) {
+        PantryService pantryService = new PantryService(allItems);
+        List<PantryItem> displayedItems = switch (pantrySelection.view()) {
+        case ALL -> allItems;
+        case SEARCH -> pantryService.searchItems(pantrySelection.firstValue());
+        case CATEGORY -> pantryService.filterByCategory(Category.valueOf(
+                pantrySelection.firstValue().toUpperCase(Locale.ROOT)));
+        case EXPIRY_BEFORE -> pantryService.filterByExpiryBefore(LocalDate.parse(pantrySelection.firstValue()));
+        case EXPIRY_BETWEEN -> pantryService.filterByExpiryRange(
+                LocalDate.parse(pantrySelection.firstValue()), LocalDate.parse(pantrySelection.secondValue()));
+        };
+        List<Integer> originalIndexes = new ArrayList<>();
+        for (PantryItem item : displayedItems) {
+            originalIndexes.add(allItems.indexOf(item));
+        }
+        return new PantryDisplay(displayedItems, originalIndexes);
     }
 
     private void connectCli(TextField commandField, Button runButton, VBox conversation) {
@@ -216,8 +242,14 @@ public class NutriByteGui extends Application {
             return;
         }
         boolean validCommandInput = isValidCommandInput(command);
+        Parser.ParsedCommand parsedCommand = new Parser().parse(command);
         String commandName = command.split("\\s+", 2)[0].toLowerCase(Locale.ROOT);
-        suppressListOutput = "list".equals(commandName);
+        suppressItemOutput = "list".equals(commandName)
+                || "search".equals(commandName)
+                || "filter".equals(commandName);
+        if (validCommandInput) {
+            updatePantrySelection(parsedCommand);
+        }
         conversation.getChildren().clear();
         appendMessage(conversation, command, false, true);
         try {
@@ -232,12 +264,33 @@ public class NutriByteGui extends Application {
     }
 
     private boolean shouldDisplayOutput(String line) {
-        if (!suppressListOutput) {
+        if (!suppressItemOutput) {
             return true;
         }
         return !line.startsWith("Pantry items:")
                 && !line.startsWith("Here's what's on your shelves:")
+                && !line.startsWith("Matching items:")
+                && !line.startsWith("Filtered items:")
                 && !line.matches("\\d+\\..*");
+    }
+
+    private void updatePantrySelection(Parser.ParsedCommand parsedCommand) {
+        String[] arguments = parsedCommand.arguments();
+        pantrySelection = switch (parsedCommand.command()) {
+        case LIST -> PantrySelection.all();
+        case SEARCH -> new PantrySelection(PantryView.SEARCH, arguments[0], null);
+        case FILTER -> createFilterSelection(arguments);
+        default -> PantrySelection.all();
+        };
+    }
+
+    private PantrySelection createFilterSelection(String[] arguments) {
+        return switch (arguments[0].toLowerCase(Locale.ROOT)) {
+        case "category" -> new PantrySelection(PantryView.CATEGORY, arguments[1], null);
+        case "expiry-before" -> new PantrySelection(PantryView.EXPIRY_BEFORE, arguments[1], null);
+        case "expiry-between" -> new PantrySelection(PantryView.EXPIRY_BETWEEN, arguments[1], arguments[2]);
+        default -> PantrySelection.all();
+        };
     }
 
     private boolean isValidCommandInput(String input) {
@@ -261,14 +314,29 @@ public class NutriByteGui extends Application {
     }
 
     private boolean isValidAddInput(String[] arguments) {
-        if (arguments.length != 2 && arguments.length != 4) {
+        if (arguments.length < 2 || arguments.length > 5) {
             return false;
         }
-        if (!isPositiveInteger(arguments[1])) {
+        if (!isValidName(arguments[0]) || !isPositiveInteger(arguments[1])) {
             return false;
         }
-        return arguments.length == 2
-                || isValidCategory(arguments[2]) && isValidDate(arguments[3]);
+        if (arguments.length == 2) {
+            return true;
+        }
+        if (arguments.length == 3) {
+            return isValidCategory(arguments[2]);
+        }
+        if (arguments.length == 4) {
+            return (isValidCategory(arguments[2]) || "expiry".equalsIgnoreCase(arguments[2]))
+                    && isValidDate(arguments[3]);
+        }
+        return isValidCategory(arguments[2])
+                && "expiry".equalsIgnoreCase(arguments[3])
+                && isValidDate(arguments[4]);
+    }
+
+    private boolean isValidName(String value) {
+        return value.matches("[\\p{L}\\p{N}](?:[\\p{L}\\p{N} -]*[\\p{L}\\p{N}])?");
     }
 
     private boolean isValidFilterInput(String[] arguments) {
@@ -284,7 +352,8 @@ public class NutriByteGui extends Application {
         return "expiry-between".equalsIgnoreCase(arguments[0])
                 && arguments.length == 3
                 && isValidDate(arguments[1])
-                && isValidDate(arguments[2]);
+                && isValidDate(arguments[2])
+                && !LocalDate.parse(arguments[1]).isAfter(LocalDate.parse(arguments[2]));
     }
 
     private boolean isValidEditValue(String field, String value) {
@@ -390,7 +459,7 @@ public class NutriByteGui extends Application {
     /**
      * Renders one pantry item with a visible index and separated metadata.
      */
-    private static class PantryItemCell extends ListCell<PantryItem> {
+    private class PantryItemCell extends ListCell<PantryItem> {
         @Override
         protected void updateItem(PantryItem item, boolean empty) {
             super.updateItem(item, empty);
@@ -401,7 +470,8 @@ public class NutriByteGui extends Application {
                 return;
             }
 
-            Label index = new Label((getIndex() + 1) + ".");
+            int originalIndex = getIndex() < displayedIndexes.size() ? displayedIndexes.get(getIndex()) : getIndex();
+            Label index = new Label((originalIndex + 1) + ".");
             index.setMinWidth(30);
             index.getStyleClass().add("item-index");
 
@@ -455,5 +525,22 @@ public class NutriByteGui extends Application {
             case GENERAL, OTHER -> "category-neutral";
             };
         }
+    }
+
+    private enum PantryView {
+        ALL,
+        SEARCH,
+        CATEGORY,
+        EXPIRY_BEFORE,
+        EXPIRY_BETWEEN
+    }
+
+    private record PantrySelection(PantryView view, String firstValue, String secondValue) {
+        private static PantrySelection all() {
+            return new PantrySelection(PantryView.ALL, null, null);
+        }
+    }
+
+    private record PantryDisplay(List<PantryItem> items, List<Integer> originalIndexes) {
     }
 }
