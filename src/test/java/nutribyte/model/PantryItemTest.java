@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +28,19 @@ class PantryItemTest {
         PantryItem item = new PantryItem("Milk", 2, Category.DAIRY, LocalDate.of(2026, 9, 15));
 
         assertEquals("Milk (2) [dairy, expires 2026-09-15]", item.toString());
+    }
+
+    @Test
+    void toString_usesLocaleIndependentCategoryFormatting() {
+        Locale previousLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            PantryItem item = new PantryItem("Milk", 2, Category.DAIRY, null);
+
+            assertEquals("Milk (2) [dairy]", item.toString());
+        } finally {
+            Locale.setDefault(previousLocale);
+        }
     }
 
     @Test
