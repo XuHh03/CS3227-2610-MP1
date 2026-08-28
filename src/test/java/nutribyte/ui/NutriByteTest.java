@@ -51,12 +51,15 @@ class NutriByteTest {
 
     @Test
     void main_invalidInput_explainsExpectedCorrection() {
-        String output = runApplication("add milk zero\nadd milk 2 dairy 2026-02-30\n"
-                + "add milk 2 unknown\ndelete nope\nsearch\nbye\n");
+        String output = runApplication("add milk 2\nadd milk zero\nadd milk 2 dairy expires 2026-09-15\n"
+                + "add milk 2 dairy 2026-02-30\n"
+                + "add milk 2 unknown\nedit 1 name milk!\ndelete nope\nsearch\nbye\n");
 
         assertTrue(output.contains("positive whole number"));
+        assertTrue(output.contains("Invalid add format"));
         assertTrue(output.contains("real calendar date"));
         assertTrue(output.contains("Invalid category 'unknown'"));
+        assertTrue(output.contains("Value 'milk!' is invalid for name"));
         assertTrue(output.contains("Item index 'nope' is invalid"));
         assertTrue(output.contains("Search format: search <text>"));
     }

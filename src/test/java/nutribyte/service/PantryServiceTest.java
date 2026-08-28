@@ -172,6 +172,14 @@ class PantryServiceTest {
     }
 
     @Test
+    void searchItems_multiWordQuery_matchesCompletePhrase() {
+        PantryService pantryService = new PantryService(List.of(new PantryItem("Red Apples", 2)));
+
+        assertEquals(List.of("Red Apples"), pantryService.searchItems("red apples").stream()
+                .map(item -> item.getName()).toList());
+    }
+
+    @Test
     void filterByCategory_matchingCategory_returnsMatchingItems() {
         PantryService pantryService = new PantryService();
         pantryService.addItem("Rice", 3, Category.GRAINS, null);

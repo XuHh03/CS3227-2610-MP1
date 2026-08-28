@@ -117,6 +117,7 @@ Expected result:
 - Command status and help output appear in the compact status area.
 - Pantry items remain visible in the scrollable pantry list.
 - The command field accepts both the Run button and the Enter key.
+- A valid `bye` or `exit` command closes the GUI immediately.
 - The conversation panel shows only the most recently submitted command and its response.
 - Search and filter results, including their numbered items, appear in the conversation panel.
 - Search and filter results replace the pantry view while retaining their original pantry indexes.
@@ -153,6 +154,8 @@ Expected result:
 - An unrecognized command remains in the input field so it can be corrected and resubmitted.
 - A recognized command with invalid arguments, such as `add 3 milk`, also remains in the input field.
 - Error messages identify the invalid value and show the expected format or a valid example.
+- Invalid edit names such as `edit 1 name milk!` remain in the GUI input field.
+- Multi-word search text such as `search red apples` is searched as one complete phrase.
 - Leading/trailing or repeated whitespace does not crash the parser and is handled consistently.
 - Invalid names, non-positive quantities, malformed dates, and unknown categories show a clear error.
 - A reversed expiry range shows an error instead of silently returning an empty result.
