@@ -107,7 +107,7 @@ public class NutriByteGui extends Application {
                 event -> refreshPantryList(pantryList)));
         refreshTimer.setCycleCount(Timeline.INDEFINITE);
         refreshTimer.play();
-        connectCli(commandField, runButton, conversation);
+        connectCli(commandField, runButton, conversation, stage);
     }
 
     private ListView<PantryItem> createPantryList() {
@@ -183,7 +183,7 @@ public class NutriByteGui extends Application {
         return new PantryDisplay(displayedItems, originalIndexes);
     }
 
-    private void connectCli(TextField commandField, Button runButton, VBox conversation) {
+    private void connectCli(TextField commandField, Button runButton, VBox conversation, Stage stage) {
         PrintStream originalOutput = System.out;
         InputStream originalInput = System.in;
         PipedOutputStream commandWriter = new PipedOutputStream();
@@ -202,7 +202,7 @@ public class NutriByteGui extends Application {
             appendMessage(conversation, "Unable to start command input.", true, false);
         }
 
-        Runnable submitCommand = () -> sendCommand(commandField, commandWriter, conversation);
+        Runnable submitCommand = () -> sendCommand(commandField, commandWriter, conversation, stage);
         runButton.setOnAction(event -> submitCommand.run());
         commandField.setOnAction(event -> submitCommand.run());
     }
@@ -236,7 +236,8 @@ public class NutriByteGui extends Application {
         return new PrintStream(outputStream, true, StandardCharsets.UTF_8);
     }
 
-    private void sendCommand(TextField commandField, PipedOutputStream commandWriter, VBox conversation) {
+    private void sendCommand(TextField commandField, PipedOutputStream commandWriter,
+            VBox conversation, Stage stage) {
         String command = commandField.getText().trim();
         if (command.isEmpty()) {
             return;
@@ -258,6 +259,10 @@ public class NutriByteGui extends Application {
             if (validCommandInput) {
                 commandField.clear();
             }
+            if (validCommandInput && (Parser.Command.BYE.equals(parsedCommand.command())
+                    || Parser.Command.EXIT.equals(parsedCommand.command()))) {
+                Platform.runLater(stage::close);
+            }
         } catch (IOException exception) {
             appendMessage(conversation, "Unable to send command.", true, false);
         }
@@ -278,7 +283,7 @@ public class NutriByteGui extends Application {
         String[] arguments = parsedCommand.arguments();
         pantrySelection = switch (parsedCommand.command()) {
         case LIST -> PantrySelection.all();
-        case SEARCH -> new PantrySelection(PantryView.SEARCH, arguments[0], null);
+        case SEARCH -> new PantrySelection(PantryView.SEARCH, String.join(" ", arguments), null);
         case FILTER -> createFilterSelection(arguments);
         default -> PantrySelection.all();
         };
@@ -358,7 +363,7 @@ public class NutriByteGui extends Application {
 
     private boolean isValidEditValue(String field, String value) {
         return switch (field.toLowerCase(Locale.ROOT)) {
-        case "name" -> !value.isBlank();
+        case "name" -> isValidName(value);
         case "quantity" -> isPositiveInteger(value);
         case "category" -> isValidCategory(value);
         case "expiry" -> "none".equalsIgnoreCase(value) || isValidDate(value);
