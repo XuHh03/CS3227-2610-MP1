@@ -125,25 +125,27 @@ class PantryServiceTest {
     }
 
     @Test
-    void deleteItem_existingItem_removesOnlyMatchingItem() {
+    void deleteItem_index_removesExactlySelectedItem() {
         PantryService pantryService = new PantryService();
         pantryService.addItem("Milk", 5);
-        pantryService.addItem("Bread", 2);
+        pantryService.addItem("Milk", 2);
+        pantryService.addItem("Bread", 1);
 
-        boolean deleted = pantryService.deleteItem("MILK");
+        PantryOperationResult result = pantryService.deleteItem(2);
 
-        assertEquals(true, deleted);
-        assertIterableEquals(List.of("Bread"), pantryService.getItems().stream()
+        assertEquals(PantryOperationResult.SUCCESS, result);
+        assertIterableEquals(List.of("Milk", "Bread"), pantryService.getItems().stream()
                 .map(item -> item.getName())
                 .toList());
     }
 
     @Test
-    void deleteItem_unknownItem_returnsFalseAndPreservesItems() {
+    void deleteItem_invalidIndex_returnsInvalidIndexAndPreservesItems() {
         PantryService pantryService = new PantryService();
         pantryService.addItem("Milk", 5);
 
-        assertEquals(false, pantryService.deleteItem("Bread"));
+        assertEquals(PantryOperationResult.INVALID_INDEX, pantryService.deleteItem(0));
+        assertEquals(PantryOperationResult.INVALID_INDEX, pantryService.deleteItem(2));
         assertEquals(1, pantryService.getItems().size());
     }
 

@@ -179,16 +179,26 @@ public class NutriByte {
     }
 
     private static void deleteItem(String[] parts, PantryService pantryService) {
-        if (parts.length == 0) {
-            System.out.println("Usage: delete <name>");
+        if (parts.length != 1) {
+            System.out.println("Usage: delete <index>");
             return;
         }
-        String name = parts[0];
 
-        if (pantryService.deleteItem(name)) {
-            System.out.println("Deleted: " + name);
-        } else {
-            System.out.println("Item not found: " + name);
+        try {
+            int index = Integer.parseInt(parts[0]);
+            if (index < 1 || index > pantryService.getItems().size()) {
+                System.out.println("Item number is out of range.");
+                return;
+            }
+            PantryItem item = pantryService.getItems().get(index - 1);
+            PantryOperationResult result = pantryService.deleteItem(index);
+            if (result == PantryOperationResult.SUCCESS) {
+                System.out.println("Cleared item " + index + ": " + item);
+            } else {
+                System.out.println("Item number is out of range.");
+            }
+        } catch (NumberFormatException exception) {
+            System.out.println("Item number must be a whole number.");
         }
     }
 

@@ -108,19 +108,17 @@ public class PantryService {
     }
 
     /**
-     * Deletes the first pantry item with the supplied name.
+     * Deletes one pantry item selected by its one-based list index.
      *
-     * @param name item name
-     * @return true if an item was deleted
+     * @param index one-based item index
+     * @return result describing whether the deletion succeeded
      */
-    public boolean deleteItem(String name) {
-        for (int index = 0; index < items.size(); index++) {
-            if (items.get(index).getName().equalsIgnoreCase(name)) {
-                items.remove(index);
-                return true;
-            }
+    public PantryOperationResult deleteItem(int index) {
+        if (index < 1 || index > items.size()) {
+            return PantryOperationResult.INVALID_INDEX;
         }
-        return false;
+        items.remove(index - 1);
+        return PantryOperationResult.SUCCESS;
     }
 
     /**
