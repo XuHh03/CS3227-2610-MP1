@@ -1,5 +1,7 @@
 package nutribyte.ui;
 
+import java.util.Locale;
+
 /**
  * Converts raw command-line input into a command and its arguments.
  */
@@ -11,6 +13,9 @@ public class Parser {
      * @return parsed command
      */
     public ParsedCommand parse(String input) {
+        if (input == null) {
+            return new ParsedCommand(Command.UNKNOWN, new String[0]);
+        }
         String trimmedInput = input.trim();
         if (trimmedInput.isEmpty()) {
             return new ParsedCommand(Command.UNKNOWN, new String[0]);
@@ -19,7 +24,7 @@ public class Parser {
         String[] parts = trimmedInput.split("\\s+");
         Command command;
         try {
-            command = Command.valueOf(parts[0].toUpperCase());
+            command = Command.valueOf(parts[0].toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
             command = Command.UNKNOWN;
         }

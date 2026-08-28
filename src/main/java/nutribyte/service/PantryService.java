@@ -66,7 +66,7 @@ public class PantryService {
      * @return true if the item was found and updated
      */
     public PantryOperationResult consumeItem(String name, int quantity) {
-        if (quantity <= 0) {
+        if (name == null || name.isBlank() || quantity <= 0) {
             return PantryOperationResult.INVALID_QUANTITY;
         }
         for (PantryItem item : items) {
@@ -92,7 +92,7 @@ public class PantryService {
      * @return true if the item was found and updated
      */
     public PantryOperationResult restockItem(String name, int quantity) {
-        if (quantity <= 0) {
+        if (name == null || name.isBlank() || quantity <= 0) {
             return PantryOperationResult.INVALID_QUANTITY;
         }
         for (PantryItem item : items) {
@@ -216,6 +216,9 @@ public class PantryService {
      * @return matching items
      */
     public List<PantryItem> filterByExpiryRange(LocalDate start, LocalDate end) {
+        if (start != null && end != null && start.isAfter(end)) {
+            throw new IllegalArgumentException("Start date must not be later than end date.");
+        }
         List<PantryItem> matches = new ArrayList<>();
         for (PantryItem item : items) {
             LocalDate expiryDate = item.getExpiryDate();

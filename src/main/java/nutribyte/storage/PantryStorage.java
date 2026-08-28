@@ -43,7 +43,9 @@ public class PantryStorage {
                 continue;
             }
             String[] fields = line.split("\\t", -1);
-            assert fields.length == 4 : "Persisted pantry records must contain four fields";
+            if (fields.length != 4) {
+                throw new IllegalArgumentException("Persisted pantry records must contain four fields.");
+            }
             Category category = Category.valueOf(fields[2]);
             LocalDate expiryDate = fields[3].isBlank() ? null : LocalDate.parse(fields[3]);
             items.add(new PantryItem(fields[0], Integer.parseInt(fields[1]), category, expiryDate));

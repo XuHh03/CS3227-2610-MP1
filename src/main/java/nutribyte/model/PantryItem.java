@@ -30,6 +30,11 @@ public class PantryItem {
      * @param expiryDate expiry date, or null when unknown
      */
     public PantryItem(String name, int quantity, Category category, LocalDate expiryDate) {
+        validateName(name);
+        validateQuantity(quantity);
+        if (category == null) {
+            throw new IllegalArgumentException("Category must not be null.");
+        }
         this.name = name;
         this.quantity = quantity;
         this.category = category;
@@ -53,14 +58,19 @@ public class PantryItem {
     }
 
     public void setName(String name) {
+        validateName(name);
         this.name = name;
     }
 
     public void setQuantity(int quantity) {
+        validateQuantity(quantity);
         this.quantity = quantity;
     }
 
     public void setCategory(Category category) {
+        if (category == null) {
+            throw new IllegalArgumentException("Category must not be null.");
+        }
         this.category = category;
     }
 
@@ -74,7 +84,24 @@ public class PantryItem {
      * @param amount positive to add stock, negative to consume stock
      */
     public void changeQuantity(int amount) {
-        quantity += amount;
+        long updatedQuantity = (long) quantity + amount;
+        if (updatedQuantity < 0 || updatedQuantity > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("Quantity must not become negative or overflow.");
+        }
+        quantity = (int) updatedQuantity;
+    }
+
+    private static void validateName(String name) {
+        if (name == null || name.isBlank()
+                || !name.matches("[\\p{L}\\p{N}](?:[\\p{L}\\p{N} -]*[\\p{L}\\p{N}])?")) {
+            throw new IllegalArgumentException("Name must contain letters, numbers, spaces, or hyphens.");
+        }
+    }
+
+    private static void validateQuantity(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero.");
+        }
     }
 
     @Override

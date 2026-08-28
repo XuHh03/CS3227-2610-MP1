@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 
 import nutribyte.model.Category;
@@ -129,12 +130,14 @@ public class NutriByte {
             }
         } catch (NumberFormatException exception) {
             System.out.println("Quantity must be a whole number.");
+        } catch (IllegalArgumentException exception) {
+            System.out.println("Invalid item: " + exception.getMessage());
         }
     }
 
     private static Category parseCategory(String value) {
         try {
-            return Category.valueOf(value.toUpperCase());
+            return Category.valueOf(value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
             System.out.println("Unknown category. Use general, grains, dairy, produce, meat, canned,");
             System.out.println("snacks, or other.");
@@ -175,6 +178,8 @@ public class NutriByte {
             }
         } catch (NumberFormatException exception) {
             System.out.println("Quantity must be a whole number.");
+        } catch (IllegalArgumentException exception) {
+            System.out.println("Could not update quantity: " + exception.getMessage());
         }
     }
 
@@ -282,6 +287,8 @@ public class NutriByte {
             }
         } catch (DateTimeParseException exception) {
             System.out.println("Expiry date must use YYYY-MM-DD format.");
+        } catch (IllegalArgumentException exception) {
+            System.out.println("Invalid expiry range: " + exception.getMessage());
         }
     }
 }
