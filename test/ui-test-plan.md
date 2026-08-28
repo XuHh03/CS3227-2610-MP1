@@ -17,6 +17,15 @@ continue to pass as regression tests, and each new user-facing feature must
 have at least one corresponding test case before the increment is considered
 complete.
 
+## Manual GUI compatibility checks
+
+The JavaFX GUI is manually tested on Ubuntu, macOS, and Windows using the
+supported Java 25 runtime. For each platform, verify the minimum window size,
+normal resizing, pantry background visibility, custom item cells, avatars,
+search/filter result display, and Enter-key command submission. Repeat the
+visual checks with an English locale and one non-English OS locale to catch
+layout or date-formatting problems.
+
 ## UI-010 — Display help
 
 Aim: Verify that `help` displays usage information for all available commands.
@@ -100,6 +109,7 @@ Expected result:
 - Pantry items remain visible in the scrollable pantry list.
 - The command field accepts both the Run button and the Enter key.
 - The conversation panel shows only the most recently submitted command and its response.
+- Search and filter results, including their numbered items, appear in the conversation panel.
 
 ## GUI-003 — Distinguish user commands and errors
 
@@ -129,6 +139,11 @@ Expected result:
 - Each command's multi-line response appears in one wrapped neutral message box.
 - Indentation in structured responses such as `help` is preserved for readability.
 - The unknown-command error appears in one distinct red-tinted message box.
+- An unrecognized command remains in the input field so it can be corrected and resubmitted.
+- A recognized command with invalid arguments, such as `add 3 milk`, also remains in the input field.
+- Leading/trailing or repeated whitespace does not crash the parser and is handled consistently.
+- Invalid names, non-positive quantities, malformed dates, and unknown categories show a clear error.
+- A reversed expiry range shows an error instead of silently returning an empty result.
 - Submitting another command replaces the previous command and response in the conversation panel.
 - Long responses automatically scroll to keep the latest output visible.
 - The window remains usable after resizing it to a smaller supported size.

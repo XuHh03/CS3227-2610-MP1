@@ -52,6 +52,14 @@ class ParserTest {
     }
 
     @Test
+    void parse_nullInput_returnsUnknownCommand() {
+        Parser.ParsedCommand result = parser.parse(null);
+
+        assertEquals(Parser.Command.UNKNOWN, result.command());
+        assertArrayEquals(new String[0], result.arguments());
+    }
+
+    @Test
     void parse_editCommand_returnsEditCommand() {
         Parser.ParsedCommand result = parser.parse("edit 1 quantity 5");
 

@@ -205,6 +205,14 @@ class PantryServiceTest {
     }
 
     @Test
+    void filterByExpiryRange_reversedDates_rejectsInvalidRange() {
+        PantryService pantryService = new PantryService();
+
+        assertThrows(IllegalArgumentException.class, () -> pantryService.filterByExpiryRange(
+                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 9, 1)));
+    }
+
+    @Test
     void constructor_initialItems_preservesInsertionOrder() {
         List<PantryItem> initialItems = List.of(new PantryItem("Rice", 3), new PantryItem("Milk", 2));
 
