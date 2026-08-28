@@ -1,5 +1,11 @@
 # NutriByte command-line UI test plan
 
+## Personality notes
+
+Byte is NutriByte's upbeat, practical pantry sidekick. User-facing greetings,
+help text, confirmations, and the GUI use friendly shelf and freshness language.
+The personality supports the pantry workflow without adding unnecessary chatter.
+
 These tests run each scenario as a separate process using Java 25. Output must
 match exactly, including line order and punctuation. UI-001 through UI-007 use
 an isolated temporary data file; remove it before each case.
@@ -30,7 +36,7 @@ Available commands:
   list
   consume <name> <quantity>
   restock <name> <quantity>
-  delete <name>
+  delete <index>
   search <text>
   filter category <category>
   filter expiry-before <date>
@@ -93,6 +99,39 @@ Expected result:
 - Command status and help output appear in the compact status area.
 - Pantry items remain visible in the scrollable pantry list.
 - The command field accepts both the Run button and the Enter key.
+- The conversation panel shows only the most recently submitted command and its response.
+
+## GUI-003 — Distinguish user commands and errors
+
+Aim: Verify that the polished GUI makes the conversation easy to scan and
+draws attention to invalid input.
+
+Run:
+
+```text
+./gradlew run
+```
+
+Input in the GUI command field:
+
+```text
+add rice 3
+wat
+```
+
+Expected result:
+
+- The pantry section remains the largest area and expands when the window is resized.
+- Each pantry row displays its one-based index for use with `delete <index>` and `edit <index>`.
+- Each row separates the item name and quantity from colored category and expiry badges.
+- Expiry badges are green for later dates, orange for dates within seven days, and red for expired items.
+- The submitted commands appear as right-aligned blue messages.
+- Each command's multi-line response appears in one wrapped neutral message box.
+- Indentation in structured responses such as `help` is preserved for readability.
+- The unknown-command error appears in one distinct red-tinted message box.
+- Submitting another command replaces the previous command and response in the conversation panel.
+- Long responses automatically scroll to keep the latest output visible.
+- The window remains usable after resizing it to a smaller supported size.
 
 ## UI-012 — Reject invalid edit targets and values
 
@@ -148,7 +187,7 @@ Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
-          delete <name>, search <text>,
+          delete <index>, search <text>,
           filter category|expiry-before|expiry-between, list, bye
 Goodbye! Keep your pantry fresh.
 ```
@@ -190,7 +229,7 @@ Expected output:
 Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
-          restock <name> <quantity>, delete <name>, search <text>,
+          restock <name> <quantity>, delete <index>, search <text>,
           filter category|expiry-before|expiry-between, list, bye
 Added: milk (2)
 Added: rice (3)
@@ -226,7 +265,7 @@ Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
-          delete <name>, search <text>,
+          delete <index>, search <text>,
           filter category|expiry-before|expiry-between, list, bye
 Pantry items:
 1. oats (2) [grains, expires 2026-12-01]
@@ -252,7 +291,7 @@ Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
-          delete <name>, search <text>,
+          delete <index>, search <text>,
           filter category|expiry-before|expiry-between, list, bye
 Added: milk (2)
 Pantry items:
@@ -279,7 +318,7 @@ Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
-          delete <name>, search <text>,
+          delete <index>, search <text>,
           filter category|expiry-before|expiry-between, list, bye
 Added: rice (3)
 Pantry items:
@@ -308,7 +347,7 @@ Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
-          delete <name>, search <text>,
+          delete <index>, search <text>,
           filter category|expiry-before|expiry-between, list, bye
 Added: rice (3)
 Consumed: rice (1)
@@ -342,7 +381,7 @@ Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
-          delete <name>, search <text>,
+          delete <index>, search <text>,
           filter category|expiry-before|expiry-between, list, bye
 Added: rice (3)
 Not enough stock to consume 5 rice.
@@ -375,7 +414,7 @@ Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
-          delete <name>, search <text>,
+          delete <index>, search <text>,
           filter category|expiry-before|expiry-between, list, bye
 Added: rice (3)
 Added: brown (2)
@@ -385,17 +424,19 @@ Matching items:
 Goodbye! Keep your pantry fresh.
 ```
 
-## UI-006 — Delete a pantry item
+## UI-006 — Delete a pantry item by index
 
-Aim: Verify that delete removes the named item and reports unknown items.
+Aim: Verify that delete removes the exact item selected by its displayed index
+and reports invalid indexes.
 
 Input:
 
 ```text
 add rice 3
 add milk 1
-delete rice
-delete flour
+add milk 4
+delete 3
+delete 9
 list
 bye
 ```
@@ -407,13 +448,14 @@ Hello! I'm NutriByte.
 What can I do for you?
 Commands: add <name> <quantity> [category] [expiry YYYY-MM-DD],
           consume <name> <quantity>, restock <name> <quantity>,
-          delete <name>, search <text>,
+          delete <index>, search <text>,
           list, bye
 Added: rice (3)
 Added: milk (1)
-Deleted: rice
-Item not found: flour
+Deleted item 3: milk (4)
+Item number is out of range.
 Pantry items:
-1. milk (1)
+1. rice (3)
+2. milk (1)
 Goodbye! Keep your pantry fresh.
 ```
