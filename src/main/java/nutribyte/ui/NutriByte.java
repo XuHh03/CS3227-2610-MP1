@@ -104,7 +104,7 @@ public class NutriByte {
         try {
             storage.save(pantryService.getItems());
         } catch (IOException exception) {
-            System.out.println("Could not save pantry data.");
+            System.out.println("Could not save pantry data. Check that the data file is writable.");
         }
     }
 
@@ -294,18 +294,14 @@ public class NutriByte {
             return;
         }
         String query = String.join(" ", parts);
+        List<PantryItem> matches = pantryService.searchItems(query);
 
-        if (pantryService.searchItems(query).isEmpty()) {
+        if (matches.isEmpty()) {
             System.out.println("No matching items found.");
             return;
         }
 
-        System.out.println("Matching items:");
-        int itemNumber = 1;
-        for (PantryItem item : pantryService.searchItems(query)) {
-            System.out.println(itemNumber + ". " + item);
-            itemNumber++;
-        }
+        showMatches("Matching items:", matches, pantryService);
         System.out.println("Here you go! The matching items are shown above. "
                 + "Use 'list' to see your full pantry again.");
     }
@@ -339,12 +335,7 @@ public class NutriByte {
             if (matches.isEmpty()) {
                 System.out.println("No matching items found.");
             } else {
-                System.out.println("Filtered items:");
-                int itemNumber = 1;
-                for (PantryItem item : matches) {
-                    System.out.println(itemNumber + ". " + item);
-                    itemNumber++;
-                }
+                showMatches("Filtered items:", matches, pantryService);
                 System.out.println("Here you go! The matching items are shown above. "
                         + "Use 'list' to see your full pantry again.");
             }
@@ -352,6 +343,15 @@ public class NutriByte {
             System.out.println("Invalid expiry date. Use YYYY-MM-DD and a real calendar date, such as 2026-09-15.");
         } catch (IllegalArgumentException exception) {
             System.out.println("Invalid expiry range: " + exception.getMessage());
+        }
+    }
+
+    private static void showMatches(String heading, List<PantryItem> matches,
+            PantryService pantryService) {
+        System.out.println(heading);
+        for (PantryItem item : matches) {
+            int originalIndex = pantryService.getItems().indexOf(item) + 1;
+            System.out.println(originalIndex + ". " + item);
         }
     }
 

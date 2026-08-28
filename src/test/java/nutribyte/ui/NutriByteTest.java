@@ -39,6 +39,14 @@ class NutriByteTest {
     }
 
     @Test
+    void main_searchAndFilterCommands_preserveOriginalIndexes() {
+        String output = runApplication("add rice 3\nadd milk 2 dairy\nsearch milk\nfilter category dairy\nbye\n");
+
+        assertTrue(output.contains("Matching items:\n2. milk (2) [dairy]"));
+        assertTrue(output.contains("Filtered items:\n2. milk (2) [dairy]"));
+    }
+
+    @Test
     void main_quantityCommands_duplicateNamesRequireExplicitIndex() {
         String output = runApplication("add milk 5\nadd milk 3\nconsume milk 1\n"
                 + "consume index 2 2\nconsume index 2 2\nrestock index 1 1\nlist\nbye\n");
