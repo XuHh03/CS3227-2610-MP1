@@ -138,9 +138,12 @@ public class NutriByte {
                 }
                 pantryService.addItem(parts[0], quantity, category, expiryDate);
             } else if (parts.length == 5) {
+                if (!"expiry".equalsIgnoreCase(parts[3])) {
+                    System.out.println("Invalid add format. Use: add <name> <quantity> <category> expiry <YYYY-MM-DD>");
+                    return;
+                }
                 Category category = parseCategory(parts[2]);
-                LocalDate expiryDate = "expiry".equalsIgnoreCase(parts[3])
-                        ? parseExpiryDate(parts[4]) : null;
+                LocalDate expiryDate = parseExpiryDate(parts[4]);
                 if (category == null || expiryDate == null) {
                     return;
                 }
@@ -270,7 +273,7 @@ public class NutriByte {
             System.out.println("Search format: search <text>, for example search milk.");
             return;
         }
-        String query = parts[0];
+        String query = String.join(" ", parts);
 
         if (pantryService.searchItems(query).isEmpty()) {
             System.out.println("No matching items found.");
