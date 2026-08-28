@@ -69,19 +69,39 @@ public class PantryService {
         if (name == null || name.isBlank() || quantity <= 0) {
             return PantryOperationResult.INVALID_QUANTITY;
         }
-        for (PantryItem item : items) {
-            if (item.getName().equalsIgnoreCase(name)) {
-                if (quantity > item.getQuantity()) {
-                    return PantryOperationResult.INSUFFICIENT_STOCK;
-                }
-                int previousQuantity = item.getQuantity();
-                item.changeQuantity(-quantity);
-                assert item.getQuantity() == previousQuantity - quantity
-                        && item.getQuantity() >= 0 : "Consuming stock must preserve quantity accounting";
-                return PantryOperationResult.SUCCESS;
-            }
+        int matchingIndex = findUniqueItemIndex(name);
+        if (matchingIndex == -1) {
+            return PantryOperationResult.ITEM_NOT_FOUND;
         }
-        return PantryOperationResult.ITEM_NOT_FOUND;
+        if (matchingIndex == -2) {
+            return PantryOperationResult.AMBIGUOUS_ITEM;
+        }
+        return consumeItem(matchingIndex + 1, quantity);
+    }
+
+    /**
+     * Reduces the quantity of the pantry item at a one-based index.
+     *
+     * @param index one-based item index
+     * @param quantity number of units consumed
+     * @return result describing whether the operation succeeded
+     */
+    public PantryOperationResult consumeItem(int index, int quantity) {
+        if (quantity <= 0) {
+            return PantryOperationResult.INVALID_QUANTITY;
+        }
+        if (index < 1 || index > items.size()) {
+            return PantryOperationResult.INVALID_INDEX;
+        }
+        PantryItem item = items.get(index - 1);
+        if (quantity > item.getQuantity()) {
+            return PantryOperationResult.INSUFFICIENT_STOCK;
+        }
+        int previousQuantity = item.getQuantity();
+        item.changeQuantity(-quantity);
+        assert item.getQuantity() == previousQuantity - quantity
+                && item.getQuantity() >= 0 : "Consuming stock must preserve quantity accounting";
+        return PantryOperationResult.SUCCESS;
     }
 
     /**
@@ -95,16 +115,49 @@ public class PantryService {
         if (name == null || name.isBlank() || quantity <= 0) {
             return PantryOperationResult.INVALID_QUANTITY;
         }
-        for (PantryItem item : items) {
-            if (item.getName().equalsIgnoreCase(name)) {
-                int previousQuantity = item.getQuantity();
-                item.changeQuantity(quantity);
-                assert item.getQuantity() == previousQuantity + quantity
-                        : "Restocking must increase quantity by the requested amount";
-                return PantryOperationResult.SUCCESS;
+        int matchingIndex = findUniqueItemIndex(name);
+        if (matchingIndex == -1) {
+            return PantryOperationResult.ITEM_NOT_FOUND;
+        }
+        if (matchingIndex == -2) {
+            return PantryOperationResult.AMBIGUOUS_ITEM;
+        }
+        return restockItem(matchingIndex + 1, quantity);
+    }
+
+    /**
+     * Increases the quantity of the pantry item at a one-based index.
+     *
+     * @param index one-based item index
+     * @param quantity number of units restocked
+     * @return result describing whether the operation succeeded
+     */
+    public PantryOperationResult restockItem(int index, int quantity) {
+        if (quantity <= 0) {
+            return PantryOperationResult.INVALID_QUANTITY;
+        }
+        if (index < 1 || index > items.size()) {
+            return PantryOperationResult.INVALID_INDEX;
+        }
+        PantryItem item = items.get(index - 1);
+        int previousQuantity = item.getQuantity();
+        item.changeQuantity(quantity);
+        assert item.getQuantity() == previousQuantity + quantity
+                : "Restocking must increase quantity by the requested amount";
+        return PantryOperationResult.SUCCESS;
+    }
+
+    private int findUniqueItemIndex(String name) {
+        int matchingIndex = -1;
+        for (int index = 0; index < items.size(); index++) {
+            if (items.get(index).getName().equalsIgnoreCase(name)) {
+                if (matchingIndex != -1) {
+                    return -2;
+                }
+                matchingIndex = index;
             }
         }
-        return PantryOperationResult.ITEM_NOT_FOUND;
+        return matchingIndex;
     }
 
     /**
@@ -132,6 +185,12 @@ public class PantryService {
     public PantryOperationResult editItem(int index, String field, String value) {
         if (index < 1 || index > items.size()) {
             return PantryOperationResult.INVALID_INDEX;
+        }
+        if (field == null || field.isBlank()) {
+            return PantryOperationResult.INVALID_FIELD;
+        }
+        if (value == null || value.isBlank()) {
+            return PantryOperationResult.INVALID_VALUE;
         }
         PantryItem item = items.get(index - 1);
         assert item != null : "Every valid pantry index must refer to an item";
@@ -165,6 +224,9 @@ public class PantryService {
      */
     public List<PantryItem> searchItems(String query) {
         List<PantryItem> matches = new ArrayList<>();
+        if (query == null || query.isBlank()) {
+            return Collections.unmodifiableList(matches);
+        }
         String normalizedQuery = query.toLowerCase(Locale.ROOT);
         for (PantryItem item : items) {
             String name = item.getName().toLowerCase(Locale.ROOT);

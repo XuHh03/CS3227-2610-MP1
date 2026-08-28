@@ -156,6 +156,8 @@ Expected result:
 - Error messages identify the invalid value and show the expected format or a valid example.
 - Invalid edit names such as `edit 1 name milk!` remain in the GUI input field.
 - Multi-word search text such as `search red apples` is searched as one complete phrase.
+- Duplicate names are not changed ambiguously; use `consume index <index> <quantity>` or
+  `restock index <index> <quantity>` to select the intended item.
 - Leading/trailing or repeated whitespace does not crash the parser and is handled consistently.
 - Invalid names, non-positive quantities, malformed dates, and unknown categories show a clear error.
 - A reversed expiry range shows an error instead of silently returning an empty result.

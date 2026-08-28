@@ -86,6 +86,17 @@ class PantryServiceTest {
     }
 
     @Test
+    void consumeItem_duplicateName_returnsAmbiguousItemWithoutChangingStock() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 5);
+        pantryService.addItem("Milk", 3);
+
+        assertEquals(PantryOperationResult.AMBIGUOUS_ITEM, pantryService.consumeItem("Milk", 1));
+        assertEquals(5, pantryService.getItems().get(0).getQuantity());
+        assertEquals(3, pantryService.getItems().get(1).getQuantity());
+    }
+
+    @Test
     void consumeItem_quantityExceedsStock_returnsInsufficientStock() {
         PantryService pantryService = new PantryService();
         pantryService.addItem("Milk", 5);
@@ -122,6 +133,28 @@ class PantryServiceTest {
         PantryService pantryService = new PantryService();
 
         assertEquals(PantryOperationResult.ITEM_NOT_FOUND, pantryService.restockItem("Milk", 2));
+    }
+
+    @Test
+    void restockItem_duplicateName_returnsAmbiguousItemWithoutChangingStock() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 5);
+        pantryService.addItem("Milk", 3);
+
+        assertEquals(PantryOperationResult.AMBIGUOUS_ITEM, pantryService.restockItem("Milk", 1));
+        assertEquals(5, pantryService.getItems().get(0).getQuantity());
+        assertEquals(3, pantryService.getItems().get(1).getQuantity());
+    }
+
+    @Test
+    void consumeItem_byIndex_updatesSelectedDuplicate() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 5);
+        pantryService.addItem("Milk", 3);
+
+        assertEquals(PantryOperationResult.SUCCESS, pantryService.consumeItem(2, 2));
+        assertEquals(5, pantryService.getItems().get(0).getQuantity());
+        assertEquals(1, pantryService.getItems().get(1).getQuantity());
     }
 
     @Test
@@ -289,5 +322,24 @@ class PantryServiceTest {
         assertEquals(PantryOperationResult.INVALID_VALUE, pantryService.editItem(1, "expiry", "tomorrow"));
         assertEquals("Milk", pantryService.getItems().get(0).getName());
         assertEquals(2, pantryService.getItems().get(0).getQuantity());
+    }
+
+    @Test
+    void editItem_nullFieldOrValue_returnsSpecificValidationResult() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 2);
+
+        assertEquals(PantryOperationResult.INVALID_FIELD, pantryService.editItem(1, null, "Milk"));
+        assertEquals(PantryOperationResult.INVALID_VALUE, pantryService.editItem(1, "name", null));
+        assertEquals("Milk", pantryService.getItems().get(0).getName());
+    }
+
+    @Test
+    void searchItems_nullOrBlankQuery_returnsNoMatches() {
+        PantryService pantryService = new PantryService();
+        pantryService.addItem("Milk", 2);
+
+        assertEquals(List.of(), pantryService.searchItems(null));
+        assertEquals(List.of(), pantryService.searchItems("   "));
     }
 }

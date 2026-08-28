@@ -304,7 +304,7 @@ public class NutriByteGui extends Application {
         try {
             return switch (parsedCommand.command()) {
             case ADD -> isValidAddInput(arguments);
-            case CONSUME, RESTOCK -> arguments.length == 2 && isPositiveInteger(arguments[1]);
+            case CONSUME, RESTOCK -> isValidQuantityCommand(arguments);
             case DELETE -> arguments.length == 1 && isPositiveInteger(arguments[0]);
             case SEARCH -> arguments.length > 0;
             case FILTER -> isValidFilterInput(arguments);
@@ -338,6 +338,16 @@ public class NutriByteGui extends Application {
         return isValidCategory(arguments[2])
                 && "expiry".equalsIgnoreCase(arguments[3])
                 && isValidDate(arguments[4]);
+    }
+
+    private boolean isValidQuantityCommand(String[] arguments) {
+        if (arguments.length == 2) {
+            return isPositiveInteger(arguments[1]);
+        }
+        return arguments.length == 3
+                && "index".equalsIgnoreCase(arguments[0])
+                && isPositiveInteger(arguments[1])
+                && isPositiveInteger(arguments[2]);
     }
 
     private boolean isValidName(String value) {
@@ -418,7 +428,8 @@ public class NutriByteGui extends Application {
                 || text.startsWith("Value '")
                 || text.startsWith("Editable fields")
                 || text.startsWith("Invalid value")
-                || text.startsWith("Could not");
+                || text.startsWith("Could not")
+                || text.startsWith("Multiple pantry items");
     }
 
     private void appendMessage(VBox conversation, String text, boolean error, boolean userMessage) {

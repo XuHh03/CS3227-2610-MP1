@@ -39,6 +39,19 @@ class NutriByteTest {
     }
 
     @Test
+    void main_quantityCommands_duplicateNamesRequireExplicitIndex() {
+        String output = runApplication("add milk 5\nadd milk 3\nconsume milk 1\n"
+                + "consume index 2 2\nconsume index 2 2\nrestock index 1 1\nlist\nbye\n");
+
+        assertTrue(output.contains("Multiple pantry items match 'milk'"));
+        assertTrue(output.contains("Marked as consumed item 2 (2)."));
+        assertTrue(output.contains("Not enough stock in item 2 to consume 2 units."));
+        assertTrue(output.contains("Topped up item 1 (1)."));
+        assertTrue(output.contains("1. milk (6)"));
+        assertTrue(output.contains("2. milk (1)"));
+    }
+
+    @Test
     void main_addCommand_acceptsOptionalCategoryAndExpiryIndependently() {
         String output = runApplication("add milk 2 dairy\n"
                 + "add rice 3 expiry 2026-12-01\n"

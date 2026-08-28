@@ -192,30 +192,50 @@ public class NutriByte {
     }
 
     private static void changeQuantity(String[] parts, PantryService pantryService, boolean restock) {
-        String command = restock ? "restock" : "consume";
-        if (parts.length != 2) {
-            System.out.println("Usage: " + (restock ? "restock" : "consume") + " <name> <positive quantity>");
+        boolean indexMode = parts.length == 3 && "index".equalsIgnoreCase(parts[0]);
+        String quantityText = indexMode ? parts[2] : parts.length > 1 ? parts[1] : "";
+        if (parts.length != 2 && !indexMode) {
+            System.out.println("Usage: " + (restock ? "restock" : "consume")
+                    + " <name> <positive quantity> or " + (restock ? "restock" : "consume")
+                    + " index <index> <positive quantity>");
             return;
         }
 
         try {
-            int quantity = Integer.parseInt(parts[1]);
-            PantryOperationResult result = restock
-                    ? pantryService.restockItem(parts[0], quantity)
-                    : pantryService.consumeItem(parts[0], quantity);
+            int index = indexMode ? Integer.parseInt(parts[1]) : -1;
+            int quantity = Integer.parseInt(indexMode ? parts[2] : parts[1]);
+            PantryOperationResult result;
+            if (indexMode) {
+                result = restock ? pantryService.restockItem(index, quantity)
+                        : pantryService.consumeItem(index, quantity);
+            } else {
+                result = restock ? pantryService.restockItem(parts[0], quantity)
+                        : pantryService.consumeItem(parts[0], quantity);
+            }
             if (result == PantryOperationResult.SUCCESS) {
                 System.out.println((restock ? "Topped up " : "Marked as consumed ")
-                        + parts[0] + " (" + quantity + ").");
+                        + (indexMode ? "item " + parts[1] : parts[0]) + " (" + quantity + ").");
             } else if (result == PantryOperationResult.INVALID_QUANTITY) {
-                System.out.println("Quantity must be a positive whole number. You entered " + parts[1] + ".");
+                System.out.println("Quantity must be a positive whole number. You entered " + quantityText + ".");
+            } else if (result == PantryOperationResult.INVALID_INDEX) {
+                System.out.println("Item index " + parts[1] + " is out of range. Use an index shown by 'list'.");
+            } else if (result == PantryOperationResult.AMBIGUOUS_ITEM) {
+                System.out.println("Multiple pantry items match '" + parts[0]
+                        + "'. Use " + (restock ? "restock" : "consume") + " index <index> <quantity>.");
             } else if (result == PantryOperationResult.INSUFFICIENT_STOCK) {
-                System.out.println("Not enough stock to consume " + quantity + " " + parts[0] + ".");
+                String target = indexMode ? "item " + parts[1] : parts[0];
+                System.out.println("Not enough stock in " + target + " to consume " + quantity + " units.");
             } else {
                 System.out.println("Item not found: " + parts[0]);
             }
         } catch (NumberFormatException exception) {
-            System.out.println("Quantity '" + parts[1]
-                    + "' is invalid. Enter a positive whole number, such as 3.");
+            if (indexMode && !parts[1].matches("[+-]?\\d+")) {
+                System.out.println("Item index '" + parts[1]
+                        + "' is invalid. Enter a positive whole number.");
+            } else {
+                System.out.println("Quantity '" + quantityText
+                        + "' is invalid. Enter a positive whole number, such as 3.");
+            }
         } catch (IllegalArgumentException exception) {
             System.out.println("Could not update quantity. " + exception.getMessage());
         }

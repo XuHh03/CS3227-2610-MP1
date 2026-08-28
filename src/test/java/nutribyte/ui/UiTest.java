@@ -23,6 +23,7 @@ class UiTest {
 
         assertTrue(output.contains("Byte, your pantry sidekick"));
         assertTrue(output.contains("delete <index>"));
+        assertTrue(output.contains("consume/restock index <index> <quantity>"));
         assertTrue(output.contains("expiry <YYYY-MM-DD>"));
     }
 

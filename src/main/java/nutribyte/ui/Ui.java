@@ -16,7 +16,7 @@ public class Ui {
         System.out.println("Ready to keep your shelves fresh?");
         System.out.println("Commands: add <name> <quantity> [category], expiry <YYYY-MM-DD>,");
         System.out.println("          add <name> <quantity> <category> expiry <YYYY-MM-DD>,");
-        System.out.println("          restock <name> <quantity>, delete <index>, search <text>,");
+        System.out.println("          consume/restock index <index> <quantity>, delete <index>, search <text>,");
         System.out.println("          filter category|expiry-before|expiry-between, edit <index> <field> <value>,");
         System.out.println("          help, list, bye");
     }
@@ -33,9 +33,9 @@ public class Ui {
         System.out.println("      Stock up your pantry.");
         System.out.println("  list");
         System.out.println("      Take a quick look at your shelves.");
-        System.out.println("  consume <name> <quantity>");
+        System.out.println("  consume <name> <quantity> or consume index <index> <quantity>");
         System.out.println("      Mark some stock as consumed.");
-        System.out.println("  restock <name> <quantity>");
+        System.out.println("  restock <name> <quantity> or restock index <index> <quantity>");
         System.out.println("      Top up an item's stock.");
         System.out.println("  delete <index>");
         System.out.println("      Clear the pantry item at its displayed list index.");
