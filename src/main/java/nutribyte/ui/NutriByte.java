@@ -16,8 +16,8 @@ import nutribyte.storage.PantryStorage;
 /**
  * Command-line entry point for the NutriByte pantry application.
  *
- * <p>Milestone 1 provides only the application's greeting and exit flow.
- * Pantry operations will be added in later milestones.</p>
+ * <p>The command-line interface supports pantry inventory, quantity, metadata,
+ * search, filtering, editing, and persistence operations.</p>
  */
 public class NutriByte {
     private static final Parser PARSER = new Parser();
@@ -52,7 +52,7 @@ public class NutriByte {
             Parser.ParsedCommand parsedCommand = PARSER.parse(scanner.nextLine());
             if (parsedCommand.command() == Parser.Command.BYE
                     || parsedCommand.command() == Parser.Command.EXIT) {
-                System.out.println("Goodbye! Keep your pantry fresh.");
+                System.out.println("Catch you later—keep it fresh!");
                 savePantry(pantryService, storage);
                 return;
             }
@@ -85,7 +85,7 @@ public class NutriByte {
                 UI.showHelp();
             }
             default -> {
-                System.out.println("Unknown command. Try 'add', 'consume', 'restock', 'delete', 'search',");
+                System.out.println("Hmm, I don't recognize that command. Try 'add', 'consume', 'restock',");
                 System.out.println("'filter', 'edit', 'list', or 'bye'.");
             }
             }
@@ -125,7 +125,7 @@ public class NutriByte {
                 System.out.println("Usage: add <name> <quantity> [category] [expiry YYYY-MM-DD]");
                 return;
             }
-            System.out.println("Added: " + parts[0] + " (" + quantity + ")");
+            System.out.println("Nice! Added " + parts[0] + " (" + quantity + ") to the pantry.");
             }
         } catch (NumberFormatException exception) {
             System.out.println("Quantity must be a whole number.");
@@ -164,8 +164,8 @@ public class NutriByte {
                     ? pantryService.restockItem(parts[0], quantity)
                     : pantryService.consumeItem(parts[0], quantity);
             if (result == PantryOperationResult.SUCCESS) {
-                System.out.println((restock ? "Restocked: " : "Consumed: ")
-                        + parts[0] + " (" + quantity + ")");
+                System.out.println((restock ? "Topped up " : "Marked as consumed ")
+                        + parts[0] + " (" + quantity + ").");
             } else if (result == PantryOperationResult.INVALID_QUANTITY) {
                 System.out.println("Quantity must be greater than zero.");
             } else if (result == PantryOperationResult.INSUFFICIENT_STOCK) {
@@ -211,7 +211,7 @@ public class NutriByte {
             int index = Integer.parseInt(parts[0]);
             PantryOperationResult result = pantryService.editItem(index, parts[1], parts[2]);
             if (result == PantryOperationResult.SUCCESS) {
-                System.out.println("Edited item " + index + ".");
+                System.out.println("Updated item " + index + "—looking good!");
             } else if (result == PantryOperationResult.INVALID_INDEX) {
                 System.out.println("Item number is out of range.");
             } else if (result == PantryOperationResult.INVALID_FIELD) {
