@@ -1,11 +1,13 @@
 package nutribyte.ui;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -57,6 +59,18 @@ class NutriByteTest {
         assertTrue(output.contains("Invalid category 'unknown'"));
         assertTrue(output.contains("Item index 'nope' is invalid"));
         assertTrue(output.contains("Search format: search <text>"));
+    }
+
+    @Test
+    void main_malformedData_doesNotOverwriteExistingFile() throws Exception {
+        Path dataFile = temporaryDirectory.resolve("pantry.txt");
+        String malformedData = "Milk\tnot-a-number\tDAIRY\t2026-09-15\n";
+        Files.writeString(dataFile, malformedData);
+
+        String output = runApplication("bye\n");
+
+        assertTrue(output.contains("The existing data was not changed"));
+        assertEquals(malformedData, Files.readString(dataFile));
     }
 
     private String runApplication(String input) {

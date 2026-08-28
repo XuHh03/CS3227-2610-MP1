@@ -33,28 +33,33 @@ public class NutriByte {
         Path dataPath = Path.of(System.getProperty("nutribyte.dataFile", "data/pantry.txt"));
         PantryStorage storage = new PantryStorage(dataPath);
         try (Scanner scanner = new Scanner(System.in)) {
-            PantryService pantryService = loadPantry(storage);
+            PantryLoadResult pantryLoadResult = loadPantry(storage);
             UI.showGreeting();
-            runCommandLoop(scanner, pantryService, storage);
+            runCommandLoop(scanner, pantryLoadResult.service(), storage,
+                    pantryLoadResult.persistenceAvailable());
         }
     }
 
-    private static PantryService loadPantry(PantryStorage storage) {
+    private static PantryLoadResult loadPantry(PantryStorage storage) {
         try {
-            return new PantryService(storage.load());
+            return new PantryLoadResult(new PantryService(storage.load()), true);
         } catch (IOException | RuntimeException exception) {
             System.out.println("Could not load pantry data. Starting with an empty pantry.");
-            return new PantryService();
+            System.out.println("The existing data was not changed; fix the data file before saving again.");
+            return new PantryLoadResult(new PantryService(), false);
         }
     }
 
-    private static void runCommandLoop(Scanner scanner, PantryService pantryService, PantryStorage storage) {
+    private static void runCommandLoop(Scanner scanner, PantryService pantryService,
+            PantryStorage storage, boolean persistenceAvailable) {
         while (scanner.hasNextLine()) {
             Parser.ParsedCommand parsedCommand = PARSER.parse(scanner.nextLine());
             if (parsedCommand.command() == Parser.Command.BYE
                     || parsedCommand.command() == Parser.Command.EXIT) {
                 System.out.println("Catch you later—keep it fresh!");
-                savePantry(pantryService, storage);
+                if (persistenceAvailable) {
+                    savePantry(pantryService, storage);
+                }
                 return;
             }
             switch (parsedCommand.command()) {
@@ -89,7 +94,9 @@ public class NutriByte {
                 System.out.println("I don't recognize that command. Type 'help' to see the available commands.");
             }
             }
-            savePantry(pantryService, storage);
+            if (persistenceAvailable) {
+                savePantry(pantryService, storage);
+            }
         }
     }
 
@@ -323,5 +330,8 @@ public class NutriByte {
         } catch (IllegalArgumentException exception) {
             System.out.println("Invalid expiry range: " + exception.getMessage());
         }
+    }
+
+    private record PantryLoadResult(PantryService service, boolean persistenceAvailable) {
     }
 }
