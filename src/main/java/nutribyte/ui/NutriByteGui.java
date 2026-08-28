@@ -16,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -46,8 +45,6 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import nutribyte.model.Category;
 import nutribyte.model.PantryItem;
-import nutribyte.service.PantryService;
-import nutribyte.storage.PantryStorage;
 
 /**
  * JavaFX front end for NutriByte's command-based pantry application.
@@ -162,8 +159,7 @@ public class NutriByteGui extends Application {
     private void refreshPantryList(ListView<PantryItem> pantryList) {
         Path dataPath = Path.of(System.getProperty(DATA_FILE_PROPERTY, DEFAULT_DATA_FILE));
         try {
-            List<PantryItem> allItems = new PantryStorage(dataPath).load();
-            PantryDisplay display = createPantryDisplay(allItems);
+            PantryDisplay display = new PantryDisplayProvider(dataPath).load(pantrySelection);
             pantryList.getItems().setAll(display.items());
             displayedIndexes = display.originalIndexes();
             pantryList.setPlaceholder(new Label("Your pantry is empty. Add an item below to get started."));
@@ -172,24 +168,6 @@ public class NutriByteGui extends Application {
             displayedIndexes = List.of();
             pantryList.setPlaceholder(new Label("Unable to load pantry data. Check the file and its permissions."));
         }
-    }
-
-    private PantryDisplay createPantryDisplay(List<PantryItem> allItems) {
-        PantryService pantryService = new PantryService(allItems);
-        List<PantryItem> displayedItems = switch (pantrySelection.view()) {
-        case ALL -> allItems;
-        case SEARCH -> pantryService.searchItems(pantrySelection.firstValue());
-        case CATEGORY -> pantryService.filterByCategory(Category.valueOf(
-                pantrySelection.firstValue().toUpperCase(Locale.ROOT)));
-        case EXPIRY_BEFORE -> pantryService.filterByExpiryBefore(LocalDate.parse(pantrySelection.firstValue()));
-        case EXPIRY_BETWEEN -> pantryService.filterByExpiryRange(
-                LocalDate.parse(pantrySelection.firstValue()), LocalDate.parse(pantrySelection.secondValue()));
-        };
-        List<Integer> originalIndexes = new ArrayList<>();
-        for (PantryItem item : displayedItems) {
-            originalIndexes.add(allItems.indexOf(item));
-        }
-        return new PantryDisplay(displayedItems, originalIndexes);
     }
 
     private void connectCli(TextField commandField, Button runButton, VBox conversation, Stage stage) {
@@ -474,20 +452,4 @@ public class NutriByteGui extends Application {
         }
     }
 
-    private enum PantryView {
-        ALL,
-        SEARCH,
-        CATEGORY,
-        EXPIRY_BEFORE,
-        EXPIRY_BETWEEN
-    }
-
-    private record PantrySelection(PantryView view, String firstValue, String secondValue) {
-        private static PantrySelection all() {
-            return new PantrySelection(PantryView.ALL, null, null);
-        }
-    }
-
-    private record PantryDisplay(List<PantryItem> items, List<Integer> originalIndexes) {
-    }
 }
