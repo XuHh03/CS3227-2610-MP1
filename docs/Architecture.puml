@@ -1,0 +1,52 @@
+@startuml
+title NutriByte Architecture
+
+skinparam componentStyle rectangle
+
+actor User
+
+package "User Interface Layer" as UI {
+    component "CLI / JavaFX GUI" as UserInterface
+}
+
+package "Service Layer" as Service {
+    component "Pantry Operations" as PantryService
+}
+
+package "Model Layer" as Model {
+    component "Pantry Domain Objects" as DomainModel
+}
+
+package "Storage Layer" as Storage {
+    component "File Persistence" as PantryStorage
+    database "pantry.txt" as PantryFile
+}
+
+User --> UserInterface : interacts with
+UserInterface --> PantryService : requests operations
+PantryService --> DomainModel : creates and updates
+PantryService --> PantryStorage : loads and saves
+PantryStorage --> PantryFile : reads and writes
+
+note right of UserInterface
+Provides the command-line
+and JavaFX interfaces.
+end note
+
+note right of PantryService
+Contains pantry business rules
+such as add, consume, search,
+filter, edit, and delete.
+end note
+
+note right of DomainModel
+Represents validated pantry
+items and categories.
+end note
+
+note right of PantryStorage
+Keeps persistence separate
+from business logic.
+end note
+
+@enduml
