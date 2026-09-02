@@ -2,17 +2,11 @@ plugins {
     id 'java'
     id 'application'
     id 'checkstyle'
-    id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'com.gradleup.shadow' version '9.5.1'
 }
 
 checkstyle {
     toolVersion = '11.0.0'
-}
-
-javafx {
-    version = '25'
-    modules = ['javafx.controls']
 }
 
 java {
@@ -25,7 +19,16 @@ repositories {
 }
 
 dependencies {
+    String javaFxVersion = '25'
     String jUnitVersion = '5.14.4'
+
+    // Bundle native JavaFX libraries for the supported desktop platforms so the
+    // Shadow JAR can be launched with `java -jar` on each of them.
+    ['win', 'mac', 'linux'].each { platform ->
+        implementation "org.openjfx:javafx-base:${javaFxVersion}:${platform}"
+        implementation "org.openjfx:javafx-graphics:${javaFxVersion}:${platform}"
+        implementation "org.openjfx:javafx-controls:${javaFxVersion}:${platform}"
+    }
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jUnitVersion}"
 
@@ -48,7 +51,7 @@ test {
 }
 
 application {
-    mainClass = 'nutribyte.ui.NutriByteGui'
+    mainClass = 'nutribyte.ui.NutriByteLauncher'
 }
 
 jar {
@@ -60,6 +63,9 @@ jar {
 
 shadowJar {
     archiveFileName = 'nutribyte.jar'
+    manifest {
+        attributes 'Main-Class': 'nutribyte.ui.NutriByteLauncher'
+    }
 }
 
 run {
